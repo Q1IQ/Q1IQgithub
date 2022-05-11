@@ -29,7 +29,73 @@ goahead的websUrlHandlerDefine函数允许用户..</p><a class="button is-defaul
 
 利用这道题目可以用今年四月份hatena提出的利用方式 house of husk，能够在有large bin UAF漏洞的情况下getshell。
 https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507
-贴上学长大佬写的学习笔记：https://www.anquanke...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/DefenitCTF-wp/">Read more</a></section></article><section class="paginator is-flex is-justify-content-flex-end is-flex-wrap-wrap mt-5"><span class="page-number current">1</span><a class="page-number" href="/archives/2020/page/2/">2</a><a class="page-number" href="/archives/2020/page/3/">3</a><a class="extend next" rel="next" href="/archives/2020/page/2/"><i class="iconfont icon-next has-text-grey"></i></a></section></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container archives-widget is-in-archive-page"><h3>Archives</h3><section><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/04/">April 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">January 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li></ul></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+贴上学长大佬写的学习笔记：https://www.anquanke...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/DefenitCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/RCTF-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/RCTF-wp/">RCTF 2020 wp</a></h2><time class="has-text-grey" datetime="2020-06-02T02:22:15.000Z">2020-06-02</time><p class="is-flex-grow-2 mt-2">bf1 程序分析题目是一个brainfuck的解释器，给的libc是2.27。brainfuck是一种简单的、可以用最小的编译器来实现的、符合图灵完全思想的编程语言。这种语言由八种运算符构成，除了指令还包括：一个以字节为单位、被初始化为零的数组、一个指向该数组的指针（初始时指向数组的第一个字节）、以及用于输入输出的两个字节流。
+
+
+
+字符
+含义
+
+
+
+&amp;gt;
+指针加一
+
+
+&amp;lt;
+指针减一
+
+
++
+指针指向的字节的值加一
+
+
+-
+指针指向的字节的值减一
+
+
+.
+输出指针指向的单元内容（ASCII码）
+
+
+,
+输入内容到指针指向的单元（ASCII码）
+
+
+[
+如果指针指向的单元值为零，向后跳转到对应的]指令的次一指令处
+
+
+]
+如果指针指向的单元值不为零，向前跳转到对应的[指令的次一指令处
+
+
+题目逻辑是..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/RCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20211207230537.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/linux-kernel/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20211207230537.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/linux-kernel/">Linux kernel学习记录</a></h2><time class="has-text-grey" datetime="2020-04-05T11:31:04.000Z">2020-04-05</time><p class="is-flex-grow-2 mt-2">本文是kernel调试的一点心得和总结。
+kernel保护模式MMAP_MIN_ADDR ： 不允许申请NULL地址 mmap(0,….）
+kptr_restrict：         查看内核函数地址
+commit_creds和prepare_kernel_cred函数的地址都可以在 /proc/kallsyms 中查看（较老的内核版本中是 /proc/ksyms）。 
+一般情况下，/proc/kallsyms 的内容需要 root 权限才能查看
+head -n 10 /proc/kallsyms
+grep commit_creds /proc/kallsyms 
+grep prepare_kernel_cred /proc/kallsyms
+
+echo 0 &amp;gt; /proc/sys/kernel/k..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/linux-kernel/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200318020601.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/rr/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200318020601.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/TOOL"><i class="tag post-item-tag">TOOL</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/rr/">调试工具rr</a></h2><time class="has-text-grey" datetime="2020-02-29T16:16:48.000Z">2020-03-01</time><p class="is-flex-grow-2 mt-2">收获新工具 rr，功能差不多就是在gdb上加一个倒放功能，网上一搜居然没有中文资料，所以记录一下。github地址：https://github.com/mozilla/rr
+以下安装配置基于Ubuntu16.04，其余环境可以参考官方文档。
+安装配置安装依赖环境：
+sudo apt-get install ccache cmake make g++-multilib gdb \
+  pkg-config coreutils python3-pexpect manpages-dev git \
+  ninja-build capnproto libcapnp-dev
+下载rr编译：
+git clone https://github.com/mozilla/rr.git
+mkdir obj &amp;amp;&amp;amp..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/rr/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/IOFILE/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/IOFILE/">IOFILE题目小结</a></h2><time class="has-text-grey" datetime="2020-02-19T03:58:15.000Z">2020-02-19</time><p class="is-flex-grow-2 mt-2">源码调试要下载源码得先把sources.list的deb-src开头的注释去掉，更新一下
+sudo apt-get update 
+sudo apt-get upgrade 
+下载源码
+sudo apt-get source libc6-dev
+会报这么一个错，但是不影响用，暂且不管。
+W: Can&amp;#39;t drop privileges for downloading as file &amp;#39;glibc_2.23-0ubuntu11.dsc&amp;#39; couldn&amp;#39;t be accessed by user &amp;#39;_apt&amp;#39;. - pkgAcquire::Run (13: Permission denied)
+在gdb里运行：
+directory ~/glibc/glibc-2...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/IOFILE/">Read more</a></section></article><section class="paginator is-flex is-justify-content-flex-end is-flex-wrap-wrap mt-5"><span class="page-number current">1</span><a class="page-number" href="/archives/2020/page/2/">2</a><a class="extend next" rel="next" href="/archives/2020/page/2/"><i class="iconfont icon-next has-text-grey"></i></a></section></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container archives-widget is-in-archive-page"><h3>Archives</h3><section><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/04/">April 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">January 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li></ul></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
 
 window.addEventListener('resize', $claudia.throttle(function () {
     var images = document.querySelectorAll('.js-img-fadeIn')

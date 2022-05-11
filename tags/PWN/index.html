@@ -34,7 +34,81 @@ Tcache Stashing Unlink Attack利用了calloc的分配特性，calloc不从tcache
 
 利用这道题目可以用今年四月份hatena提出的利用方式 house of husk，能够在有large bin UAF漏洞的情况下getshell。
 https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507
-贴上学长大佬写的学习笔记：https://www.anquanke...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/DefenitCTF-wp/">Read more</a></section></article><section class="paginator is-flex is-justify-content-flex-end is-flex-wrap-wrap mt-5"><span class="page-number current">1</span><a class="page-number" href="/tags/PWN/page/2/">2</a><a class="page-number" href="/tags/PWN/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/tags/PWN/page/5/">5</a><a class="extend next" rel="next" href="/tags/PWN/page/2/"><i class="iconfont icon-next has-text-grey"></i></a></section></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+贴上学长大佬写的学习笔记：https://www.anquanke...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/DefenitCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/RCTF-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/RCTF-wp/">RCTF 2020 wp</a></h2><time class="has-text-grey" datetime="2020-06-02T02:22:15.000Z">2020-06-02</time><p class="is-flex-grow-2 mt-2">bf1 程序分析题目是一个brainfuck的解释器，给的libc是2.27。brainfuck是一种简单的、可以用最小的编译器来实现的、符合图灵完全思想的编程语言。这种语言由八种运算符构成，除了指令还包括：一个以字节为单位、被初始化为零的数组、一个指向该数组的指针（初始时指向数组的第一个字节）、以及用于输入输出的两个字节流。
+
+
+
+字符
+含义
+
+
+
+&amp;gt;
+指针加一
+
+
+&amp;lt;
+指针减一
+
+
++
+指针指向的字节的值加一
+
+
+-
+指针指向的字节的值减一
+
+
+.
+输出指针指向的单元内容（ASCII码）
+
+
+,
+输入内容到指针指向的单元（ASCII码）
+
+
+[
+如果指针指向的单元值为零，向后跳转到对应的]指令的次一指令处
+
+
+]
+如果指针指向的单元值不为零，向前跳转到对应的[指令的次一指令处
+
+
+题目逻辑是..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/RCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20211207230537.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/linux-kernel/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20211207230537.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/linux-kernel/">Linux kernel学习记录</a></h2><time class="has-text-grey" datetime="2020-04-05T11:31:04.000Z">2020-04-05</time><p class="is-flex-grow-2 mt-2">本文是kernel调试的一点心得和总结。
+kernel保护模式MMAP_MIN_ADDR ： 不允许申请NULL地址 mmap(0,….）
+kptr_restrict：         查看内核函数地址
+commit_creds和prepare_kernel_cred函数的地址都可以在 /proc/kallsyms 中查看（较老的内核版本中是 /proc/ksyms）。 
+一般情况下，/proc/kallsyms 的内容需要 root 权限才能查看
+head -n 10 /proc/kallsyms
+grep commit_creds /proc/kallsyms 
+grep prepare_kernel_cred /proc/kallsyms
+
+echo 0 &amp;gt; /proc/sys/kernel/k..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/linux-kernel/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/IOFILE/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/IOFILE/">IOFILE题目小结</a></h2><time class="has-text-grey" datetime="2020-02-19T03:58:15.000Z">2020-02-19</time><p class="is-flex-grow-2 mt-2">源码调试要下载源码得先把sources.list的deb-src开头的注释去掉，更新一下
+sudo apt-get update 
+sudo apt-get upgrade 
+下载源码
+sudo apt-get source libc6-dev
+会报这么一个错，但是不影响用，暂且不管。
+W: Can&amp;#39;t drop privileges for downloading as file &amp;#39;glibc_2.23-0ubuntu11.dsc&amp;#39; couldn&amp;#39;t be accessed by user &amp;#39;_apt&amp;#39;. - pkgAcquire::Run (13: Permission denied)
+在gdb里运行：
+directory ~/glibc/glibc-2...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/IOFILE/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200203015656.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/vmPwn/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200203015656.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/vmPwn/">vm Pwn题目小结</a></h2><time class="has-text-grey" datetime="2020-01-29T05:59:34.000Z">2020-01-29</time><p class="is-flex-grow-2 mt-2">ez_op题目分析首先根据入口点找到main函数，一般入口点就是IDA里Export窗口的start函数。
+
+可以看到上面main函数的逻辑是：
+
+使用mallocinfo函数为操作数分配空间，为操作码分配空间。
+
+
+
+读入操作码至buf中，并将其转换成整数形式保存在opcode中；操作数同理保存在oprand中
+进入大循环loop函数，就是本题的虚拟机，后面详细讲解。
+使用freeinfo函数释放分配的空间
+
+
+loop函数就是虚拟机，主要逻辑是一个大循环，每次循环完成一个操作码对应的功能。那么怎么知道每个操作码对应什么功能呢，我觉得对我来说只能慢慢逆向+猜吧。这个题目的功能有save、load、push、pop、加减乘除，最后逆出来的效果就是下面这样：
+
+
+漏洞点在于load和save都没有检查是否越界..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/vmPwn/">Read more</a></section></article><section class="paginator is-flex is-justify-content-flex-end is-flex-wrap-wrap mt-5"><span class="page-number current">1</span><a class="page-number" href="/tags/PWN/page/2/">2</a><a class="page-number" href="/tags/PWN/page/3/">3</a><a class="extend next" rel="next" href="/tags/PWN/page/2/"><i class="iconfont icon-next has-text-grey"></i></a></section></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
 
 window.addEventListener('resize', $claudia.throttle(function () {
     var images = document.querySelectorAll('.js-img-fadeIn')
