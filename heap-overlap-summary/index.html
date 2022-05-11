@@ -1,0 +1,81 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>heap overlap方法小结</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="本文不考虑和top合并， 并且大小非fastbin。实际做题的时候得要考虑top。
+free时overlappoison_null_byteP(P是size被null的块)|Q
+需要构造的点：
+1. chunksize(P) == prev_size (next_chunk(P)) //因为offbyone后的size一定&amp;lt;=原始size，所以prev_size (next_chunk(P)) 可以自己伪造
+2.free(P)后分割P为块A和B A|B，此时Q的pre_inuse也为0了
+3.free A，free Q，A和Q会 consolidate， B就被overlap了
+注意 free 的时候
+- 检查前一个chunk空闲吗（检查本块的prev_inuse）
+- 检查后一个是不是top chu.."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">heap overlap方法小结</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#free%E6%97%B6overlap"><span class="toc-text">free时overlap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#poison-null-byte"><span class="toc-text">poison_null_byte</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CTFWiki5%EF%BC%9A%E9%80%9A%E8%BF%87extend%E5%89%8D%E5%90%91overlapping"><span class="toc-text">CTFWiki5：通过extend前向overlapping</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#overlapping-chunks-%E5%90%91%E9%AB%98%E5%9C%B0%E5%9D%80%E5%90%88%E5%B9%B6"><span class="toc-text">overlapping_chunks(向高地址合并)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#overlapping-chunks-2"><span class="toc-text">overlapping_chunks_2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-einherjar"><span class="toc-text">house_of_einherjar</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc%E6%97%B6overlap"><span class="toc-text">malloc时overlap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CTFWiki3%EF%BC%9A%E5%AF%B9free%E7%9A%84smallbin%E8%BF%9B%E8%A1%8Cextend"><span class="toc-text">CTFWiki3：对free的smallbin进行extend</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">heap overlap方法小结</h1><time class="has-text-grey" datetime="2019-10-10T12:27:32.000Z">2019-10-10</time><article class="mt-2 post-content"><p>本文不考虑和top合并， 并且大小非fastbin。实际做题的时候得要考虑top。</p>
+<h2 id="free时overlap"><a href="#free时overlap" class="headerlink" title="free时overlap"></a>free时overlap</h2><h3 id="poison-null-byte"><a href="#poison-null-byte" class="headerlink" title="poison_null_byte"></a>poison_null_byte</h3><p><code>P(P是size被null的块)|Q</code></p>
+<p>需要构造的点：</p>
+<pre><code>1. chunksize(P) == prev_size (next_chunk(P)) //因为offbyone后的size一定&lt;=原始size，所以prev_size (next_chunk(P)) 可以自己伪造
+2.free(P)后分割P为块A和B A|B，此时Q的pre_inuse也为0了
+3.free A，free Q，A和Q会 consolidate， B就被overlap了</code></pre>
+<p>注意 free 的时候</p>
+<pre><code>- 检查前一个chunk空闲吗（检查本块的prev_inuse）
+- 检查后一个是不是top chunk
+- 检查后一个chunk空闲吗（nextinuse = inuse_bit_at_offset(nextchunk, nextsize);）</code></pre>
+<p>这种方法利用的点就在于free Q的时候，glibc2.23 没有检查 prev_size(Q) == chunksize（pre_chunk(Q)）<br>glibc2.23:<br><img src="https://img-blog.csdnimg.cn/20191015193932305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>glibc2.29是要检查的了（我看的在线版是2.29而已），此时这个利用方法就失效了。<br><img src="https://img-blog.csdnimg.cn/20191015182545197.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h3 id="CTFWiki5：通过extend前向overlapping"><a href="#CTFWiki5：通过extend前向overlapping" class="headerlink" title="CTFWiki5：通过extend前向overlapping"></a>CTFWiki5：通过extend前向overlapping</h3><p>通过修改pre_inuse域和pre_size域实现合并前面的块</p>
+<pre><code>int main(void)
+&#123;
+    void *ptr1,*ptr2,*ptr3,*ptr4;
+    ptr1=malloc(128);//smallbin1
+    ptr2=malloc(0x10);//fastbin1
+    ptr3=malloc(0x10);//fastbin2
+    ptr4=malloc(128);//smallbin2
+    malloc(0x10);//防止与top合并
+    free(ptr1);
+    *(int *)((long long)ptr4-0x8)=0x90;//修改pre_inuse域
+    *(int *)((long long)ptr4-0x10)=0xd0;//修改pre_size域
+    free(ptr4);//unlink进行前向extend
+    malloc(0x150);//占位块
+
+&#125;</code></pre>
+<p>和 poison_null_byte 的区别在于：本例中pre_inuse(Q)和pre_size(Q)都是自己伪造的，而 poison_null_byte 是free(P)得到的。</p>
+<h3 id="overlapping-chunks-向高地址合并"><a href="#overlapping-chunks-向高地址合并" class="headerlink" title="overlapping_chunks(向高地址合并)"></a>overlapping_chunks(向高地址合并)</h3><p><code>A|B|C</code><br>A的size改为A+B的size<br>free(A)<br>malloc(sizeof(A+B)) 即可overlap B</p>
+<h3 id="overlapping-chunks-2"><a href="#overlapping-chunks-2" class="headerlink" title="overlapping_chunks_2"></a>overlapping_chunks_2</h3><p><code>A|B|C</code><br>A的size改为A+B的size<br>free( C )<br>free( A )<br>malloc(sizeof(A+B+C))<br>B就被overlap了</p>
+<h3 id="house-of-einherjar"><a href="#house-of-einherjar" class="headerlink" title="house_of_einherjar"></a>house_of_einherjar</h3><p>首先看后向合并(向低地址合并)的代码</p>
+<pre><code> if (!prev_inuse(p)) &#123;
+            prevsize = prev_size(p);
+            size += prevsize;
+            p = chunk_at_offset(p, -((long) prevsize));
+            unlink(av, p, bck, fwd);
+        &#125;</code></pre>
+<p>house_of_einherjar的关键就在于绕过unlink的检查：</p>
+<p><code>P(内部伪造了假块p)|Q(被nullbyte)</code></p>
+<pre><code>1. 利用 unlink 漏洞的时候：
+p-&gt;fd = &amp;p-3*4
+p-&gt;bk = &amp;p-2*4
+在这里利用时，因为没有办法找到 &amp;p , 所以直接让：
+p-&gt;fd = p
+p-&gt;bk = p
+2. chunksize(p) != prev_size (next_chunk(p)） next_chunk是根据p的size算的，也就是说只要p偏移size处的值为size即可。
+3. Q的pre_inuse位为0，prev_size(Q)需覆盖到p的头部，free(Q)即可获得prev_size(Q)+sizeof(Q)的空闲chunk</code></pre>
+<p>和poison_null_byte及CTFWiki5的区别就在于，free后向低地址合并的时候，house_of_einherjar低地址的块是自己伪造的，而poison_null_byte低地址的块是free来的。</p>
+<p>其实poison_null_byte低地址的块也可以自己伪造。对于<code>P|Q</code>，poison_null_byte是P被nullbyte，而且是先free(P)，再nullbyte，所以保留了pre_size(Q)，nullbyte后构造假的pre_size(nextchunk(P))，free(Q)即可获得P+Q。例子里是把P给分成了A|B（因为P的size已经被nullbyte了，所以怎么分都不会再影响pre_size(Q)），然后free A，以在free(Q)的时候绕过unlink检查，当然也可以通过伪造来绕过size和unlink检查，构造以下条件即可：</p>
+<pre><code>*(size_t*)(b1+0x100) = 0x110;//chunksize(A) != prev_size (next_chunk(A)）
+*(size_t*)(b1) = (size_t*)(b1-0x10);//FD-&gt;bk != P || BK-&gt;fd != P
+*(size_t*)(b1+0x8) =(size_t*) (b1-0x10);</code></pre>
+<p>当然分为A和B也有好处，这样能够overlap B，控制B的所有信息。</p>
+<p>以上是比较保守的做法，how2heap里的就相对大胆：在栈里伪造一个假的freed的chunk，把prev_size(Q)改为<code>nullbyte了的块的地址-栈中假chunk的地址</code>，free(Q)后获得了在栈上malloc块的机会。</p>
+<h2 id="malloc时overlap"><a href="#malloc时overlap" class="headerlink" title="malloc时overlap"></a>malloc时overlap</h2><h3 id="CTFWiki3：对free的smallbin进行extend"><a href="#CTFWiki3：对free的smallbin进行extend" class="headerlink" title="CTFWiki3：对free的smallbin进行extend"></a>CTFWiki3：对free的smallbin进行extend</h3><pre><code>int main()
+&#123;
+    void *ptr,*ptr1;
+
+    ptr=malloc(0x80);//分配第一个0x80的chunk1
+    malloc(0x10);//分配第二个0x10的chunk2
+
+    free(ptr);//首先进行释放，使得chunk1进入unsorted bin
+
+    *(int *)((int)ptr-0x8)=0xb1;
+    ptr1=malloc(0xa0);
+&#125;</code></pre>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/RoarCTF-wp/" title="RoarCTF wp"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: RoarCTF wp</span></a><a class="button is-default" href="/xman-wp/" title="xman wp"><span class="has-text-weight-semibold">Next: xman wp</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>

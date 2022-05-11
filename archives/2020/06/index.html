@@ -1,0 +1,77 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Q1IQ's blog</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/widget-post-list.css"><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><span>Archives · 2020</span></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><article class="post-container is-flex is-justify-content-center section container is-max-widescreen pt-4 px-2"><div class="columns is-variable is-1-tablet is-3-desktop-only is-2-widescreen is-full-width"><section class="column"><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200630164719653.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/D-Link-CVE-2019-7298/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200630164719653.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/CVE"><i class="tag post-item-tag">CVE</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/D-Link-CVE-2019-7298/">D-Link CVE-2019-7298学习记录</a></h2><time class="has-text-grey" datetime="2020-06-29T02:22:15.000Z">2020-06-29</time><p class="is-flex-grow-2 mt-2">漏洞分析使用binwalk提取固件。
+
+可以看出文件系统是 squashfs 。
+内核启动之后将启动init进程，init进程启动时根据/etc/inittab这个文件来在不同运行级别启动相应的进程或执行相应的操作。其中sysinit代表系统的初始化，只有系统开机或重新启动的时候，后面对应的process才会执行。
+::sysinit:/etc/init.d/rcS
+在rcS中，先执行一系列mkdir和设置，接着执行goahead。
+
+goahead 是一个开源的 web 服务器，用户的定制性非常强。可以通过一些 goahead 的 api定义 url处理函数和可供 asp 文件中调用的函数，具体可以看看官方的代码示例和网上的一些教程。
+
+goahead的websUrlHandlerDefine函数允许用户..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/D-Link-CVE-2019-7298/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614205046176.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/DefenitCTF-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614205046176.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/DefenitCTF-wp/">DefenitCTF 2020 wp</a></h2><time class="has-text-grey" datetime="2020-06-25T02:22:15.000Z">2020-06-25</time><p class="is-flex-grow-2 mt-2">PWNerrorProgram漏洞分析这道题目的堆操作给了MALLOC、FREE、EDIT、VIEW，MALLOC只能分配[0x777,0x77777]的块，也就是只能操纵large bin，FREE和EDIT都可以随意UAF，VIEW没有限制。
+
+题目给了假的栈溢出漏洞，程序会检查是否溢出并在溢出时exit退出。
+
+给了假的格式化字符串漏洞，因为输入的字符串中不能出现%和$。
+
+利用这道题目可以用今年四月份hatena提出的利用方式 house of husk，能够在有large bin UAF漏洞的情况下getshell。
+https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507
+贴上学长大佬写的学习笔记：https://www.anquanke...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/DefenitCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/RCTF-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200601105534328.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/RCTF-wp/">RCTF 2020 wp</a></h2><time class="has-text-grey" datetime="2020-06-02T02:22:15.000Z">2020-06-02</time><p class="is-flex-grow-2 mt-2">bf1 程序分析题目是一个brainfuck的解释器，给的libc是2.27。brainfuck是一种简单的、可以用最小的编译器来实现的、符合图灵完全思想的编程语言。这种语言由八种运算符构成，除了指令还包括：一个以字节为单位、被初始化为零的数组、一个指向该数组的指针（初始时指向数组的第一个字节）、以及用于输入输出的两个字节流。
+
+
+
+字符
+含义
+
+
+
+&amp;gt;
+指针加一
+
+
+&amp;lt;
+指针减一
+
+
++
+指针指向的字节的值加一
+
+
+-
+指针指向的字节的值减一
+
+
+.
+输出指针指向的单元内容（ASCII码）
+
+
+,
+输入内容到指针指向的单元（ASCII码）
+
+
+[
+如果指针指向的单元值为零，向后跳转到对应的]指令的次一指令处
+
+
+]
+如果指针指向的单元值不为零，向前跳转到对应的[指令的次一指令处
+
+
+题目逻辑是..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/RCTF-wp/">Read more</a></section></article></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container archives-widget is-in-archive-page"><h3>Archives</h3><section><ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/04/">April 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">January 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li></ul></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+
+window.addEventListener('resize', $claudia.throttle(function () {
+    var images = document.querySelectorAll('.js-img-fadeIn')
+
+    images.forEach($claudia.blurBackdropImg)
+}, 150))</script></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+
+window.addEventListener('resize', $claudia.throttle(function () {
+    var images = document.querySelectorAll('.js-img-fadeIn')
+
+    images.forEach($claudia.blurBackdropImg)
+}, 150))</script></body></html>

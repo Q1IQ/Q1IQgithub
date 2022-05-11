@@ -1,0 +1,141 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>how2heap学习小结</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="本文是自己的一点心得，没有特别地总结整理。
+编译找了半天编译的方法，结果突然发现文件夹里有个Makefile，一键make就全编译了，我觉得我就是个憨憨。
+first_fitchar* a = malloc(512); 经过对齐后 chunk size 为 0x210
+free(a); 后块a被放到 unsorted_bins 中
+
+执行 c = malloc(500); （500+8）经过16字节对齐后 chunk size 为 0x200 ，此时small bins是空的，就从unsorted bins中找，找到了大小为0x210的块a。而0x210 的块切割后剩下的块大小为0x10，小于MINSIZE（0x20），所以不切直接分配。
+
+然后自己测试了一下
+
+c = malloc(512-0x20+8).."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">how2heap学习小结</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91"><span class="toc-text">编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#first-fit"><span class="toc-text">first_fit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#fastbin-dup"><span class="toc-text">fastbin_dup</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#fastbin-dup-into-stack"><span class="toc-text">fastbin_dup_into_stack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#fastbin-dup-consolidate"><span class="toc-text">fastbin_dup_consolidate</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#unsafe-unlink"><span class="toc-text">unsafe_unlink</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-spirit"><span class="toc-text">house_of_spirit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#poison-null-byte"><span class="toc-text">poison_null_byte</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-lore-small-bin"><span class="toc-text">house_of_lore(small bin)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#overlapping-chunks%EF%BC%88%E6%9B%B4%E6%94%B9%E5%9D%97%E5%A4%A7%E5%B0%8F%EF%BC%89"><span class="toc-text">overlapping_chunks（更改块大小）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#overlapping-chunks-2%EF%BC%88%E5%90%91%E9%AB%98%E5%9C%B0%E5%9D%80%E5%90%88%E5%B9%B6%EF%BC%89"><span class="toc-text">overlapping_chunks_2（向高地址合并）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-force-top-chunk"><span class="toc-text">house_of_force(top chunk)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#unsorted-bin-into-stack"><span class="toc-text">unsorted_bin_into_stack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#unsorted-bin-attack"><span class="toc-text">unsorted_bin_attack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#large-bin-attack"><span class="toc-text">large_bin_attack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-einherjar"><span class="toc-text">house_of_einherjar</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#house-of-orange"><span class="toc-text">house_of_orange</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#House-of-Rabbit"><span class="toc-text">House of Rabbit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#House-of-Roman"><span class="toc-text">House of Roman</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tcache-dup"><span class="toc-text">tcache_dup</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tcache-poisoning"><span class="toc-text">tcache_poisoning</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tcache-house-of-spirit"><span class="toc-text">tcache_house_of_spirit</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">how2heap学习小结</h1><time class="has-text-grey" datetime="2019-10-29T07:16:48.000Z">2019-10-29</time><article class="mt-2 post-content"><p>本文是自己的一点心得，没有特别地总结整理。</p>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>找了半天编译的方法，结果突然发现文件夹里有个Makefile，一键make就全编译了，我觉得我就是个<code>憨憨</code>。</p>
+<h3 id="first-fit"><a href="#first-fit" class="headerlink" title="first_fit"></a>first_fit</h3><p><code>char* a = malloc(512);</code> 经过对齐后 chunk size 为 0x210</p>
+<p><code>free(a); </code>后块a被放到 unsorted_bins 中</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE1MTYxMzUxLnBuZw?x-oss-process=image/format,png"></p>
+<p>执行 <code>c = malloc(500);</code> （500+8）经过16字节对齐后 chunk size 为 0x200 ，此时small bins是空的，就从unsorted bins中找，找到了大小为0x210的块a。而0x210 的块切割后剩下的块大小为0x10，小于MINSIZE（0x20），所以不切直接分配。</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE1MTYxNTU2LnBuZw?x-oss-process=image/format,png"></p>
+<p>然后自己测试了一下</p>
+<ol>
+<li><p><code>c = malloc(512-0x20+8);</code>需要的 chunk size 为 0x190 ，对齐后还是0x190，切割后留下的0x20就放在unsorted bins里了。</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE1MTY0MTUyLnBuZw?x-oss-process=image/format,png"></p>
+</li>
+<li><p><code>c = malloc(512-0x20+9);</code> 对齐后为 0x200 ，就不切了。</p>
+</li>
+</ol>
+<h3 id="fastbin-dup"><a href="#fastbin-dup" class="headerlink" title="fastbin_dup"></a>fastbin_dup</h3><p>fastbin，double free<br>fastbin free的时候只检查了和bin相连的块和当前free的块地址相不相同</p>
+<h3 id="fastbin-dup-into-stack"><a href="#fastbin-dup-into-stack" class="headerlink" title="fastbin_dup_into_stack"></a>fastbin_dup_into_stack</h3><p>在栈里构造一个块，使得该块的size满足可更改fd的chunk所在的bin的idx，就可将该伪造的块放入该bin，得以分配。<br>fd改为其他的值会报错<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE4MTY1MDQ1LnBuZw?x-oss-process=image/format,png"></p>
+<pre><code>    *d = (unsigned long long) (((char*)(&amp;stack_var)) - 8);</code></pre>
+<p>报错是因为</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwOTAzMTUxNDI2LnBuZw?x-oss-process=image/format,png"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwOTAzMTUxOTEyLnBuZw?x-oss-process=image/format,png"></p>
+<p>也就是说分配的时候会根据块size计算 idx ，并和块所在 fastbin 的 idx 进行比较，如果不对就报错</p>
+<p>试着在data段分配一个堆块</p>
+<p><img src="https://img-blog.csdnimg.cn/20190929212507323.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwOTAzMTUzOTQyLnBuZw?x-oss-process=image/format,png"></p>
+<p>| <a href="glibc_2.25/fastbin_dup_into_stack.c">fastbin_dup_into_stack.c</a> | Tricking malloc into returning a nearly-arbitrary pointer by abusing the fastbin freelist. | latest | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2015/tree/master/9447-ctf-2015/exploitation/search-engine">9447-search-engine</a>, <a target="_blank" rel="noopener" href="http://uaf.io/exploitation/2017/03/19/0ctf-Quals-2017-BabyHeap2017.html">0ctf 2017-babyheap</a> |</p>
+<h3 id="fastbin-dup-consolidate"><a href="#fastbin-dup-consolidate" class="headerlink" title="fastbin_dup_consolidate"></a>fastbin_dup_consolidate</h3><p><code>malloc_consolidate</code>这个函数的作用就是将fastbin合并后置入unsorted bin，一般调用的情况有以下几种：</p>
+<pre><code>1. malloc的大小在smallbin范围内，若对应的smallbin没初始化的时候。
+2. malloc的size大于small bin的范围，先调用malloc_consolidate将fastbin 合并为unsorted bin（本例的情况，再free一次，就可以在fastbin和unsortedbin中拥有同一个块）
+3. top chunk不够空间
+4. free某chunk时，该chunk合并前后空闲块后的大小超过了fastbin的收缩阈值（FASTBIN_CONSOLIDATION_THRESHOLD 也就是65536 0x10000）。(一般与top合并时会触发)</code></pre>
+<p>同时有下面两点需要注意的:</p>
+<pre><code>1. malloc_consolidate在合并fastbin的过程中没有对其size进行校验（House of Rabbit）
+2. malloc_consolidate将合并后生成的chunk插入到unsorted bin头部</code></pre>
+<p>参考资料：<a target="_blank" rel="noopener" href="https://ch4r1l3.github.io/2019/01/22/malloc-consolidate%E8%B0%83%E7%94%A8%E6%9D%A1%E4%BB%B6/">https://ch4r1l3.github.io/2019/01/22/malloc-consolidate调用条件/</a></p>
+<p> <a href="glibc_2.25/fastbin_dup_consolidate.c">fastbin_dup_consolidate.c</a> | Tricking malloc into returning an already-allocated heap pointer by putting a pointer on both fastbin freelist and unsorted bin freelist. | latest | <a target="_blank" rel="noopener" href="https://github.com/mehQQ/public_writeup/tree/master/hitcon2016/SleepyHolder">Hitcon 2016 SleepyHolder</a> |</p>
+<h3 id="unsafe-unlink"><a href="#unsafe-unlink" class="headerlink" title="unsafe_unlink"></a>unsafe_unlink</h3><p>看 ctfwiki<br>| <a href="glibc_2.26/unsafe_unlink.c">unsafe_unlink.c</a> | Exploiting free on a corrupted chunk to get arbitrary write. | &lt; 2.26 | <a target="_blank" rel="noopener" href="http://acez.re/ctf-writeup-hitcon-ctf-2014-stkof-or-modern-heap-overflow/">HITCON CTF 2014-stkof</a>, <a target="_blank" rel="noopener" href="https://gist.github.com/niklasb/074428333b817d2ecb63f7926074427a">Insomni’hack 2017-Wheel of Robots</a> |</p>
+<h3 id="house-of-spirit"><a href="#house-of-spirit" class="headerlink" title="house_of_spirit"></a>house_of_spirit</h3><p>先初始化内存<code>malloc(1);</code><br>不可控内存的前后内存可控的话，构造：</p>
+<pre><code>1. 块的size在fastbin范围内
+2. nextchunk的size 
+&gt; 2*SIZE_SZ (&gt; 16 on x64) &amp;&amp; &lt; av-&gt;system_mem (&lt; 128kb by default for the main arena)
+没找到system_mem在哪，亲测0x21000-8可，0x21000不可
+3. The PREV_INUSE (lsb) bit is ignored by free for fastbin-sized chunks, however the IS_MMAPPED (second lsb) and NON_MAIN_ARENA (third lsb) bits cause problems.\n&quot;)</code></pre>
+<p>free该块即可将当前块放入fastbin。</p>
+<p>| <a href="glibc_2.25/house_of_spirit.c">house_of_spirit.c</a> | Frees a fake fastbin chunk to get malloc to return a nearly-arbitrary pointer. | latest | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2014/tree/master/hack-lu-ctf-2014/oreo">hack.lu CTF 2014-OREO</a> |</p>
+<h3 id="poison-null-byte"><a href="#poison-null-byte" class="headerlink" title="poison_null_byte"></a>poison_null_byte</h3><p>需要构造的点：</p>
+<pre><code>P是size被null的块，Q是P的nextchunk
+1. chunksize(P) == prev_size (next_chunk(P)) 这个size是offbyone后的size，next_chunk是根据P的size算的，prev_size (next_chunk(P)) 可以自己伪造为offbyone后的size（因为offbyone后的size一定&lt;=原始size）
+2.分割P为块A和B
+3.free A，free Q，A和Q会 consolidate， B就被overlap了
+    free的时候
+    - 检查前一个chunk空闲吗（检查本块的prev_inuse）
+    - 检查后一个是不是top chunk
+    - 检查后一个chunk空闲吗（nextinuse = inuse_bit_at_offset(nextchunk, nextsize);）</code></pre>
+<p>利用的点就在于free Q的时候，没有检查 prev_size(Q) == chunksize（pre_chunk(Q)）<br>glibc2.23检查还没那么严格，不检查chunksize( p ) != prevsize)<br><img src="https://img-blog.csdnimg.cn/20191015193932305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>2.29是要检查的了（我看的在线版是2.29而已），这个利用方法就失效了。<br><img src="https://img-blog.csdnimg.cn/20191015182545197.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>| <a href="glibc_2.25/poison_null_byte.c">poison_null_byte.c</a> | Exploiting a single null byte overflow. | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2015/tree/master/plaidctf-2015/pwnable/plaiddb">PlaidCTF 2015-plaiddb</a> |</p>
+<h3 id="house-of-lore-small-bin"><a href="#house-of-lore-small-bin" class="headerlink" title="house_of_lore(small bin)"></a>house_of_lore(small bin)</h3><p>可以修改 small bin 的最后一个 chunk 的 bk 为我们指定内存地址的 fake chunk，并且同时满足之后的 bck-&gt;fd != victim 的检测，那么我们就可以使得 small bin 的 bk 恰好为我们构造的 fake chunk。也就是说，当下一次申请 small bin 的时候，我们就会分配到指定位置的 fake chunk。<br>具体看ctfwiki吧<br>| <a href="glibc_2.26/house_of_lore.c">house_of_lore.c</a> | Tricking malloc into returning a nearly-arbitrary pointer by abusing the smallbin freelist. | &lt; 2.26 | |</p>
+<h3 id="overlapping-chunks（更改块大小）"><a href="#overlapping-chunks（更改块大小）" class="headerlink" title="overlapping_chunks（更改块大小）"></a>overlapping_chunks（更改块大小）</h3><p>A|B|C<br>A的size改为A+B的size<br>free(A)<br>malloc(sizeof(A+B)) 即可overlap B<br>| <a href="glibc_2.26/overlapping_chunks.c">overlapping_chunks.c</a> | Exploit the overwrite of a freed chunk size in the unsorted bin in order to make a new allocation overlap with an existing chunk | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2015/tree/master/hack-lu-ctf-2015/exploiting/bookstore">hack.lu CTF 2015-bookstore</a>, <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2016/tree/master/nuitduhack-quals-2016/exploit-me/night-deamonic-heap-400">Nuit du Hack 2016-night-deamonic-heap</a> |</p>
+<h3 id="overlapping-chunks-2（向高地址合并）"><a href="#overlapping-chunks-2（向高地址合并）" class="headerlink" title="overlapping_chunks_2（向高地址合并）"></a>overlapping_chunks_2（向高地址合并）</h3><p>不考虑和top合并， 块均非fastbin<br>A|B|C<br>A的size改为A+B的size<br>free( C )<br>free( A )<br>malloc(A+B+C)<br>B就被overlap了<br>| <a href="glibc_2.25/overlapping_chunks_2.c">overlapping_chunks_2.c</a> | Exploit the overwrite of an in use chunk size in order to make a new allocation overlap with an existing chunk  | latest | |</p>
+<h3 id="house-of-force-top-chunk"><a href="#house-of-force-top-chunk" class="headerlink" title="house_of_force(top chunk)"></a>house_of_force(top chunk)</h3><p>前提：</p>
+<pre><code>能够以溢出等方式控制到 top chunk 的 size 域
+能够自由地控制堆分配尺寸的大小</code></pre>
+<p>例子中把top chunk的size设为-1    (0xffffffff)，然后<code>malloc(需控制的地址-0x10-top的地址-0x8)</code>：例子中需控制的地址在bss段上（heap低地址处），因此malloc的是个负数。top被分配后指向了需控制的地址-0x10的位置，然后再从top里分配一次就可以任意地址写了。<br>| <a href="glibc_2.25/house_of_force.c">house_of_force.c</a> | Exploiting the Top Chunk (Wilderness) header in order to get malloc to return a nearly-arbitrary pointer | &lt; 2.29 | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2016/tree/master/boston-key-party-2016/pwn/cookbook-6">Boston Key Party 2016-cookbook</a>, <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2016/tree/master/bctf-2016/exploit/bcloud-200">BCTF 2016-bcloud</a> |</p>
+<h3 id="unsorted-bin-into-stack"><a href="#unsorted-bin-into-stack" class="headerlink" title="unsorted_bin_into_stack"></a>unsorted_bin_into_stack</h3><p>构造：</p>
+<pre><code>1. free块a（size为y）到unsortd bin，修改a-&gt;bk为栈中地址 stack_buffer
+2. 构造栈中块的size z、构造bk里存放的是一个可写的地址（比较苛刻，很难找到这两者同时满足的块）
+     stack_buffer[1] = 0x100 + 0x10;
+  stack_buffer[3] = (intptr_t)(stack_buffer+10);
+3. malloc(z)即可在栈中的块任意写。</code></pre>
+<p>| <a href="glibc_2.26/unsorted_bin_into_stack.c">unsorted_bin_into_stack.c</a> | Exploiting the overwrite of a freed chunk on unsorted bin freelist to return a nearly-arbitrary pointer.  | &lt; 2.26 | |</p>
+<h3 id="unsorted-bin-attack"><a href="#unsorted-bin-attack" class="headerlink" title="unsorted_bin_attack"></a>unsorted_bin_attack</h3><p>把要取出的unsorted chunk的bk改为[global_max_fast]-0x10，就可以将一个很大的值（unsorted bin的头地址 ）写到global_max_fast。</p>
+<ul>
+<li>覆盖了chunk的fd也没关系，因为根本没用上</li>
+<li>改了之后unsorted bin头的bk指向了[global_max_fast]-0x10，再插入 chunk 时，可能会出现问题，但这时候块都变成fastbin了，所以一般也没啥问题（我觉得）</li>
+<li>没有<code>bck-&gt;fd != victim</code>检查才行</li>
+</ul>
+<p>| <a href="glibc_2.26/unsorted_bin_attack.c">unsorted_bin_attack.c</a> | Exploiting the overwrite of a freed chunk on unsorted bin freelist to write a large value into arbitrary address  | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2016/tree/master/0ctf-2016/exploit/zerostorage-6">0ctf 2016-zerostorage</a> |</p>
+<h3 id="large-bin-attack"><a href="#large-bin-attack" class="headerlink" title="large_bin_attack"></a>large_bin_attack</h3><p>构造</p>
+<pre><code>1. 一个 large bin chunk 可以实现两个地址内容的修改。将 bk 和 bk_nextsize 改为某两个地址，这两个地址会被写入同一个堆地址。
+p是一个 large bin chunk 的地址
+    p2[0] = 0;//fd
+    p2[1] = (unsigned long)(&amp;stack_var2 - 2);//2表示2*8
+    p2[2] = 0;//fd_nextsize
+    p2[3] = (unsigned long)(&amp;stack_var4 - 4);
+2. 从 unsorted bin 中来的 large bin chunk 要紧跟在被构造过的 chunk 的后面（比构造过的chunk大），新来的chunk的地址就是被写入的堆地址。</code></pre>
+<p>| <a href="glibc_2.26/large_bin_attack.c">large_bin_attack.c</a> | Exploiting the overwrite of a freed chunk on large bin freelist to write a large value into arbitrary address  | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://dangokyo.me/2018/04/07/0ctf-2018-pwn-heapstorm2-write-up/">0ctf 2018-heapstorm2</a> |</p>
+<h3 id="house-of-einherjar"><a href="#house-of-einherjar" class="headerlink" title="house_of_einherjar"></a>house_of_einherjar</h3><p>前提是有一个offbyone漏洞。</p>
+<p>后向合并的代码</p>
+<pre><code> if (!prev_inuse(p)) &#123;
+            prevsize = prev_size(p);
+            size += prevsize;
+            p = chunk_at_offset(p, -((long) prevsize));
+            unlink(av, p, bck, fwd);
+        &#125;</code></pre>
+<p>构造这个块关键在于通过unlink检查：（P是伪造的将被consolidate的低地址的块，P|Q，Q被nullbyte）</p>
+<pre><code>1. 利用 unlink 漏洞的时候：
+p-&gt;fd = &amp;p-3*4
+p-&gt;bk = &amp;p-2*4
+在这里利用时，因为没有办法找到 &amp;p , 所以直接让：
+p-&gt;fd = p
+p-&gt;bk = p
+2. chunksize(P) != prev_size (next_chunk(P)） next_chunk是根据P的size算的，也就是说只要P偏移size处的值为size即可。
+3. Q的PREINUSE位为0，prev_size（Q）需覆盖到P的头部，free（Q）即可获得P+Q的空闲chunk</code></pre>
+<p>和poison_null_byte的区别在于，<br>4. 向低地址合并的时候，house_of_einherjar低地址的块是自己伪造的，而poison_null_byte低地址的块是free来的<br>5. 对于P|Q，poison_null_byte是P被nullbyte，而且是先free P，再nullbyte，所以保留了pre_size(Q)，nullbyte后构造假的pre_size(nextchunk( P ))，free Q即可获得P+Q，例子里还把P给分成了A|B（因为P的size已经被nullbyte了，所以怎么分都不会再影响pre_size(Q)），然后free A（不free也行，但为了通过size和unlink检查，就得构造：</p>
+<pre><code>*(size_t*)(b1+0x100) = 0x110;//chunksize( A ) != prev_size (next_chunk( A )）
+*(size_t*)(b1) = (size_t*)(b1-0x10);//FD-&gt;bk != P || BK-&gt;fd != P
+*(size_t*)(b1+0x8) =(size_t*) (b1-0x10);</code></pre>
+<p>），free Q后就能够overlap B，这样做的原因是更灵活，因为能控制B的所有信息；house_of_einherjar是Q被nullbyte，然后在P中构造一个假的freed的chunk（p-&gt;fd = p p-&gt;bk = p；chunksize( P ) != prev_size (next_chunk( P )），prev_size（Q）需恰好覆盖到假chunk的头部，free（Q）即可获得 <code>假chunk+Q</code>的空闲chunk。</p>
+<p>以上是比较保守的做法，how2heap里的就相对大胆，在栈里伪造一个假的freed的chunk，把prev_size（Q）改为<code>nullbyte了的块的地址-栈中假chunk的地址</code>，free（Q）获得了在栈上malloc块的机会。<br>| <a href="glibc_2.26/house_of_einherjar.c">house_of_einherjar.c</a> | Exploiting a single null byte overflow to trick malloc into returning a controlled pointer  | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://gist.github.com/hhc0null/4424a2a19a60c7f44e543e32190aaabf">Seccon 2016-tinypad</a> |</p>
+<h3 id="house-of-orange"><a href="#house-of-orange" class="headerlink" title="house_of_orange"></a>house_of_orange</h3><p>在题目没有free的情况下，通过malloc(大于top chunk size的值)以将top放入unsortedbin中来获得一个freed的chunk。<br>how2heap的16.04可跑，18.04跑不起来，看的ctfwiki，和IOFILE结合的部分还没怎么看懂<br>| <a href="glibc_2.25/house_of_orange.c">house_of_orange.c</a> | Exploiting the Top Chunk (Wilderness) in order to gain arbitrary code execution  | &lt; 2.26 | <a target="_blank" rel="noopener" href="https://github.com/ctfs/write-ups-2016/tree/master/hitcon-ctf-2016/pwn/house-of-orange-500">Hitcon 2016 houseoforange</a> |</p>
+<h3 id="House-of-Rabbit"><a href="#House-of-Rabbit" class="headerlink" title="House of Rabbit"></a>House of Rabbit</h3><p>前提条件: </p>
+<pre><code>1. 可以修改 fastbin 的 fd 指针或 size 
+2. 可以触发 malloc consolidate(merge top 或 malloc big chunk 等等)</code></pre>
+<p>效果：把块放入修改后的size对应的small bin里</p>
+<h3 id="House-of-Roman"><a href="#House-of-Roman" class="headerlink" title="House of Roman"></a>House of Roman</h3><p>fastbin attack 和 Unsortbin attack 结合的一个小 trick。<br>fastbin attack用于在malloc hook附近分配堆块<br>Unsortbin attack用于在malloc hook处填上unsorted bin header的address</p>
+<h3 id="tcache-dup"><a href="#tcache-dup" class="headerlink" title="tcache_dup"></a>tcache_dup</h3><p>tcache的doublefree，看起来什么都没检查（能放进tcache即可），只要有一个地址可以free两次就可。<br>| <a href="glibc_2.26/tcache_dup.c">tcache_dup.c</a> | Tricking malloc into returning an already-allocated heap pointer by abusing the tcache freelist. | 2.26 - 2.28 | |</p>
+<h3 id="tcache-poisoning"><a href="#tcache-poisoning" class="headerlink" title="tcache_poisoning"></a>tcache_poisoning</h3><p>只要改掉放进了tcache的块的fd，就可以获取任意地址的内存</p>
+<ul>
+<li>和fastbin attack的区别在于分配时 tcache 不和块所在 bin 的 idx 进行比较</li>
+</ul>
+<p>| <a href="glibc_2.26/tcache_poisoning.c">tcache_poisoning.c</a> | Tricking malloc into returning a completely arbitrary pointer by abusing the tcache freelist. | &gt; 2.25  | |</p>
+<h3 id="tcache-house-of-spirit"><a href="#tcache-house-of-spirit" class="headerlink" title="tcache_house_of_spirit"></a>tcache_house_of_spirit</h3><p>得先初始化内存malloc(1);<br>需构造chuck的size &lt;=0x410即在tcache范围内<br> The PREV_INUSE (lsb) bit is ignored by free for tcache chunks, however the IS_MMAPPED (second lsb) and NON_MAIN_ARENA (third lsb) bits cause problems.\n”);</p>
+<ul>
+<li>和fastbin attack的区别在于nextchunk的size 需要合法，tcache没这个要求</li>
+</ul>
+<p>| <a href="glibc_2.26/tcache_house_of_spirit.c">tcache_house_of_spirit.c</a> | Frees a fake chunk to get malloc to return a nearly-arbitrary pointer. | &gt; 2.25 | |</p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/huxiang-wp/" title="湖湘杯 wp"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: 湖湘杯 wp</span></a><a class="button is-default" href="/dfjk-ichunqiu-wp/" title="巅峰极客 ichunqiu wp"><span class="has-text-weight-semibold">Next: 巅峰极客 ichunqiu wp</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>

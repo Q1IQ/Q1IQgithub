@@ -1,0 +1,241 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>awd pwn checker编写记录</title><meta name="description" content="May the Force be with you"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="
+最近在为awd pwn题写checker，然后我写了个能检测pwn题全部功能是否可以正常使用的脚本，被反馈还需要改进下：
+
+不可以用pwntools库
+不能让选手直接nop free，要不选手体验差
+
+pwntools禁用对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，zio。
+from zio import *
+
+is_local = True
+
+if is_local:
+    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwning development
+else:
+    io = zio((&amp;#39;1.2.3.4&amp;.."><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">awd pwn checker编写记录</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#pwntools%E7%A6%81%E7%94%A8"><span class="toc-text">pwntools禁用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD-nop-free"><span class="toc-text">不能 nop free</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD%E6%94%B9%E5%A4%A7malloc-size"><span class="toc-text">不能改大malloc size</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD%E6%89%B0%E4%B9%B1plt%E8%A1%A8%E5%92%8Cgot%E8%A1%A8"><span class="toc-text">不能扰乱plt表和got表</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">awd pwn checker编写记录</h1><time class="has-text-grey" datetime="2021-03-22T14:34:14.000Z">2021-03-22</time><article class="mt-2 post-content"><p><img src="/Claudia-theme-blog/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="cover"></p>
+<p>最近在为awd pwn题写checker，然后我写了个能检测pwn题全部功能是否可以正常使用的脚本，被反馈还需要改进下：</p>
+<ul>
+<li>不可以用pwntools库</li>
+<li>不能让选手直接nop free，要不选手体验差</li>
+</ul>
+<h4 id="pwntools禁用"><a href="#pwntools禁用" class="headerlink" title="pwntools禁用"></a>pwntools禁用</h4><p>对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，<code>zio</code>。</p>
+<pre><code>from zio import *
+
+is_local = True
+
+if is_local:
+    io = zio(&#39;./buggy-server&#39;)            # used for local pwning development
+else:
+    io = zio((&#39;1.2.3.4&#39;, 1337))           # used to exploit remote service
+
+io.read_until(b&#39;Welcome Banner&#39;)
+io.write(your_awesome_ropchain_or_shellcode)
+# hey, we got an interactive shell!
+io.interact()</code></pre>
+<p>我猜不让用pwntools的原因大概是因为现在python2装不上pwntools了吧，我测试了下，现在ubuntu 16.04装不上，18.04还是可以装上的。</p>
+<p>反正第一个问题算是解决了。</p>
+<h4 id="不能-nop-free"><a href="#不能-nop-free" class="headerlink" title="不能 nop free"></a>不能 nop free</h4><p>第二个问题。</p>
+<p>首先考虑到，这场awd是要给每个选手一台服务器维护的，我作为一个checker怎么能拿到选手服务器的pwn题？打awd的时候我可以一个exp打过去拿到shell再把pwn题传过来，但作为checker的话可想而知洞会被补上。想来想去只能上ssh了，上个公钥在选手服务器。</p>
+<pre><code>import paramiko
+def down_from_remote(host, remotepath, localpath, port=22):
+    keyfile = open(&#39;./awd_rsa&#39;, &#39;r&#39;)
+    private_key = paramiko.RSAKey.from_private_key(keyfile)
+    t = paramiko.Transport((host, port))
+    t.connect(username=&#39;root&#39;, pkey=private_key)
+    sftp = paramiko.SFTPClient.from_transport(t)
+    sftp.get(remotepath, localpath)</code></pre>
+<p>然后考虑free的问题。</p>
+<p>赛场上遇到给服务器的、pwn题有uaf的话，要我修我也是先nop（bushi），当然更优美地修的话就是加段置0的汇编，然后call free的时候跳到那里，例：</p>
+<pre><code>.eh_frame:0000000000401378 ; =============== S U B R O U T I N E =======================================
+.eh_frame:0000000000401378
+.eh_frame:0000000000401378
+.eh_frame:0000000000401378 sub_401378 proc near ; CODE XREF: sub_400AEF+73竊叢
+.eh_frame:0000000000401378 mov rax, [rbp-8] ; Keypatch modified this from:
+.eh_frame:0000000000401378 ; db 14h
+.eh_frame:0000000000401378 ; db 0
+.eh_frame:0000000000401378 ; db 0
+.eh_frame:0000000000401378 ; db 0
+.eh_frame:000000000040137C mov rax, ds:ptr[rax*8] ; Keypatch modified this from:
+.eh_frame:000000000040137C ; db 0
+.eh_frame:000000000040137C ; db 0
+.eh_frame:000000000040137C ; db 0
+.eh_frame:000000000040137C ; db 0
+.eh_frame:000000000040137C ; db 1
+.eh_frame:000000000040137C ; db 7Ah
+.eh_frame:000000000040137C ; db 52h
+.eh_frame:000000000040137C ; db 0
+.eh_frame:0000000000401384 mov rdi, rax ; Keypatch modified this from:
+.eh_frame:0000000000401384 ; db 1
+.eh_frame:0000000000401384 ; db 78h
+.eh_frame:0000000000401384 ; db 10h
+.eh_frame:0000000000401387 call _free ; Keypatch modified this from:
+.eh_frame:0000000000401387 ; add [rbx], ebx
+.eh_frame:0000000000401387 ; or al, 7
+.eh_frame:0000000000401387 ; or [rax+14100701h], dl
+.eh_frame:000000000040138C mov rax, [rbp-8] ; Keypatch modified this from:
+.eh_frame:000000000040138C sub_401378 endp ; nop
+.eh_frame:000000000040138C ; db 1
+.eh_frame:000000000040138C ; db 7
+.eh_frame:000000000040138C ; db 10h
+.eh_frame:0000000000401390 mov rbx, 8
+.eh_frame:0000000000401397 mul ebx ; Keypatch filled range [0x401397:0x401396] (0 bytes), replaced:
+.eh_frame:0000000000401397 ;
+.eh_frame:0000000000401397 ; Keypatch modified this from:
+.eh_frame:0000000000401397 ; db 0C7h
+.eh_frame:0000000000401397 ; db 0
+.eh_frame:0000000000401397 ; Keypatch modified this from:
+.eh_frame:0000000000401397 ; mul eax
+.eh_frame:0000000000401399 add rax, 6020E0h ; Keypatch modified this from:
+.eh_frame:0000000000401399 ; db 0
+.eh_frame:0000000000401399 ; db 0
+.eh_frame:0000000000401399 ; db 0
+.eh_frame:0000000000401399 ; db 0
+.eh_frame:0000000000401399 ; db 0E9h
+.eh_frame:0000000000401399 ; db 0C5h
+.eh_frame:000000000040139F mov qword ptr [rax], 0 ; Keypatch modified this from:
+.eh_frame:000000000040139F ; db 0F7h
+.eh_frame:000000000040139F ; db 0FFh
+.eh_frame:000000000040139F ; db 0FFh
+.eh_frame:000000000040139F ; db 0
+.eh_frame:000000000040139F ; db 0
+.eh_frame:000000000040139F ; db 0
+.eh_frame:000000000040139F ; db 0
+.eh_frame:00000000004013A6 jmp loc_400B67 ; Keypatch modified this from:
+.eh_frame:00000000004013A6 ; db 0
+.eh_frame:00000000004013A6 ; db 0
+.eh_frame:00000000004013A6 ; db 14h
+.eh_frame:00000000004013A6 ; db 0
+.eh_frame:00000000004013A6 ; db 0
+.eh_frame:00000000004013A6 ; Keypatch modified this from:
+.eh_frame:00000000004013A6 ; call loc_400B67
+.eh_frame:00000000004013A6 ; ---------------------------------------------------------------------------</code></pre>
+<p>检测的话直接检测代码段 <code>call free </code>这句有没有被改是不行的，毕竟我patch也得改这句。</p>
+<p>检测<code>call free </code>是不是变成了<code>nop</code>指令也不行，因为除了<code>nop</code>也可以改成别的啊，虽然在不知道checker逻辑的情况下选手应该很难意识到这一点，但做checker嘛就得狠点吧大概（bushi）。</p>
+<p>也想到可以用系统调用，结果发现不行，<code>malloc</code>的时候有<code>brk</code>的系统调用如图，<code>free</code>是没走系统调用的。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20210322233514.png"></p>
+<p>这里还有一个思路，就是checker可以一直<code>malloc-&gt;free-&gt;malloc-&gt;free-&gt;malloc</code>达到一定次数，如果选手把<code>free nop</code>了，堆空间就会超过上次<code>brk</code>的地方，进程就会再调用一次<code>brk</code>申请空间，如果<code>free</code>没有被<code>nop</code>就不会出现这样的情况，这样就区别开来了。然而我出的题限制了分配的次数，而且这个方法也不够普适。</p>
+<p>又想到可以看进程的内存布局。这样我需要先找到使用题目端口的进程：</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20210323185056.png"></p>
+<p>然后过滤checker ip，就能知道是哪个进程在和checker通信，继而查看进程里的内存。</p>
+<p><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20210323190222.png"></p>
+<p>也可以直接执行从选手那传过来的二进制，但是要直接执行的话怎么也得弄个沙箱吧，万一选手整了个什么了不得的东西，而且开销很大。</p>
+<p>还有种办法是在选手服务器那边执行下看看进程堆内存，大概可行？但总感觉动选手的环境不应该是checker干的事，而且还是加一个进程进去，不过已经是能想到的比较可行的方案了。</p>
+<p>然后我也看了Flappypig战队提出来的这个<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/105387#h3-7">lowbits leak check</a>，但是关键就在于：</p>
+<ul>
+<li>那么这就给了我们在CTF线下赛中一种针对堆漏洞的Checker的思路，我们在程序交互中预先在每次malloc后，把堆地址的低12bit输出。</li>
+</ul>
+<p>我太懒了，我懒得改我费老劲出的题，我就想把checker改了交差。</p>
+<p>。。。</p>
+<p>所以为啥好多awd pwn都要求选手提供patch好的文件给主办方帮你替换，人工看的话是一件多方便的事情。</p>
+<p>所以最终方案是：先检查选手有没有修改call free，再检查有没有<code>\x90</code>（前提是那一句里原先就没有90），再看进程的内存布局，多因子检查。</p>
+<pre><code>def check_free(check_elf, ordinary_elf, call_free_address, size=5):
+    # check call free change
+    check_free_data = check_elf.get_content_from_virtual_address(
+        call_free_address, size)
+    ordinary_data = ordinary_elf.get_content_from_virtual_address(
+        call_free_address, size)
+
+    # equal =&gt; no change
+    if operator.eq(check_free_data, ordinary_data):
+        return True
+
+    # if has 90 =&gt; nop free
+    if 0x90 in check_free_data:
+        return False
+    # temporary
+    return True
+
+def check_free_from_remote(host, pwnport, local, port=22):
+    keyfile = open(&#39;./awd_rsa&#39;, &#39;r&#39;)
+    private_key = paramiko.RSAKey.from_private_key(keyfile)
+    # connect to host
+    io = zio((host, pwnport))
+
+    # get pid infomation
+    s = paramiko.SSHClient()
+    s.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    s.connect(hostname=host, port=port, username=&#39;root&#39;, pkey=private_key)  #
+    stdin, stdout, stderr = s.exec_command(
+        &quot;lsof -i:8888|grep &quot;+local+&quot;|grep  -v &#39;timeout&#39; |awk &#39;&#123;print $2&#125;&#39;|head -n 1&quot;)
+
+    checker_pwn_pid = stdout.read().decode().strip()
+
+    # initialize heap
+    io.read_until(b&#39;Input your choice:&#39;)
+    io.write(&#39;c&#39;)  # function [c]create a book
+    io.read_until(b&#39;Which book do you want to create?&#39;)
+    io.writeline(&#39;0&#39;)
+    io.read_until(b&#39;Input your choice:&#39;)
+    io.write(&#39;c&#39;)  # function [c]create a book
+    io.read_until(b&#39;Which book do you want to create?&#39;)
+    io.writeline(&#39;1&#39;)
+    # heap info
+    stdin, stdout, stderr = s.exec_command(
+        &quot;cat /proc/&#123;0&#125;/maps&quot;.format(checker_pwn_pid))
+    map_info = stdout.read().decode().split(&#39;\n&#39;)
+
+    heap_info = &#39;&#39;
+    if &#39;[heap]&#39; in map_info[3]:
+        heap_info = map_info[3]
+    else:
+        for i in map_info:
+            if &#39;[heap]&#39; in i:
+                heap_info = i
+    # malloc may be nopped
+    if heap_info == &#39;&#39;:
+        io.close()
+        return False
+
+    # heap addr
+    heap_addr_start, heap_addr_end = [int(i, 16) for i in re.match(
+        &quot;\w*-\w*&quot;, heap_info).group(0).split(&#39;-&#39;)]
+    # check mem
+    sftp = s.open_sftp()
+    io.read_until(b&#39;Input your choice:&#39;)
+    io.write(&#39;d&#39;)  # fuction [d]delete
+    io.read_until(b&#39;Which book do you want to delete?&#39;)
+    io.writeline(&#39;1&#39;)
+    io.read_until(b&#39;Input your choice:&#39;)
+    io.write(&#39;d&#39;)  # fuction [d]delete
+    io.read_until(b&#39;Which book do you want to delete?&#39;)
+    io.writeline(&#39;0&#39;)
+    # if free is there, heap should be bin-&gt;0-&gt;1
+    stdin, stdout, stderr = s.exec_command(
+        &quot;lsof -i:8888&quot;)
+    with sftp.file(&quot;/proc/&#123;0&#125;/mem&quot;.format(checker_pwn_pid), mode=&#39;rb&#39;) as file:
+        file.seek(heap_addr_start+0x8)
+        chuck_1_size = int(str(unpack(&quot;&lt;Q&quot;, file.read(8))[0]), 10)
+        chuck_1_fd = int(str(unpack(&quot;&lt;Q&quot;, file.read(8))[0]), 10)
+        if (chuck_1_fd == (heap_addr_start+0x70)) and (chuck_1_size == 0x71):
+            io.close()
+            return True
+        else:
+            io.close()
+            return False
+</code></pre>
+<h4 id="不能改大malloc-size"><a href="#不能改大malloc-size" class="headerlink" title="不能改大malloc size"></a>不能改大malloc size</h4><p>跟free相比情况就少多了，malloc相关的代码块甚至是所在的函数都不允许改动即可。</p>
+<h4 id="不能扰乱plt表和got表"><a href="#不能扰乱plt表和got表" class="headerlink" title="不能扰乱plt表和got表"></a>不能扰乱plt表和got表</h4><p>plt 和 got 表也不许改。</p>
+<pre><code>import lief
+def check_got(check_elf, ordinary_elf):
+    section = check_elf.get_section(&#39;.got.plt&#39;)
+    got_address = section.virtual_address
+    if(compare_data(check_elf, ordinary_elf, got_address, section.size)):
+        return True
+    else:
+        return False
+
+
+def check_plt(check_elf, ordinary_elf):
+    section = check_elf.get_section(&#39;.plt&#39;)
+    plt_address = section.virtual_address
+    if(compare_data(check_elf, ordinary_elf, plt_address, section.size)):
+        return True
+    else:
+        return False</code></pre>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/Linux-eBPF-exploit/" title="Linux eBPF模块漏洞利用学习记录"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: Linux eBPF模块漏洞利用学习记录</span></a><a class="button is-default" href="/bleedingtooth-CVE-2020-12351/" title="Linux 蓝牙bleedingtooth CVE-2020-12351学习记录"><span class="has-text-weight-semibold">Next: Linux 蓝牙bleedingtooth CVE-2020-12351学习记录</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="Q1IQ/Claudia-theme-blog" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com//"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><a title="instagram" target="_blank" rel="noopener nofollow" href="//www.instagram.com//"><i class="iconfont icon-ins"></i></a><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--><a title="facebook" target="_blank" rel="noopener nofollow" href="//www.facebook.com//"><i class="iconfont icon-tian7_facebook"></i></a></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>
