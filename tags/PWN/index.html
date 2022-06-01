@@ -8,10 +8,9 @@
 基础知识v8是chrome浏览器的 JavaScript 引擎，是著名的 JIT(Just In Time) 引擎。在Chromium项目中起到至关重要的作用。作为一款jit引擎，其工作模式如下图所示：
 
 
+Parser是 JS 源代码的入口，接受javascript 源文件作为输入
 Interpreter 负责从 Javascript AST 生成 bytecodes，同时也可以基于bytecode直接生成机器代码。在 V8 中该组件名为Ignition。
-JIT Complier: Turbofan作为 V8 中的优化器，其作用是将字节码优化成为固定的机器代码。在优化过程中，V8 引入了SSA(静态单赋值)形式的中间代码简化编译器的优化算法，在其若干优化过程（PASS）中实现安全的 JIT 代码生成。
-Runtime：提供各种数据结构的实现以及buildin函数等等。
-GC：V..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/v8-exploit/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn-checker/"><img class="post-cover-img js-img-fadeIn" src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn-checker/">awd pwn checker编写记录</a></h2><time class="has-text-grey" datetime="2021-03-22T14:34:14.000Z">2021-03-22</time><p class="is-flex-grow-2 mt-2">
+JIT Complier: Turbofan作为 V8 中的优化器，其作用是将字节码优化成为固定的机器代码。在优化过程中，V8 引入了SSA(静态单赋值)形式的中间代码简化编译器的优化算法，在其若干优化过程（PASS）中实现安全的 JIT 代码生成。..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/v8-exploit/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn-checker/"><img class="post-cover-img js-img-fadeIn" src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn-checker/">awd pwn checker编写记录</a></h2><time class="has-text-grey" datetime="2021-03-22T14:34:14.000Z">2021-03-22</time><p class="is-flex-grow-2 mt-2">
 最近在为awd pwn题写checker，然后我写了个能检测pwn题全部功能是否可以正常使用的脚本，被反馈还需要改进下：
 
 不可以用pwntools库
