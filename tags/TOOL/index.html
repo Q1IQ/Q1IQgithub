@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Q1IQ's blog</title><meta name="description" content="A person often meets his destiny on the road he took to avoid it."><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Q1IQ's blog</title><meta name="description" content="Being Honest With Yourself"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
 <!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/widget-post-list.css"><!-- hexo injector head_end start -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
 
@@ -12,14 +12,15 @@ sudo apt-get install ccache cmake make g++-multilib gdb \
   ninja-build capnproto libcapnp-dev
 下载rr编译：
 git clone https://github.com/mozilla/rr.git
-mkdir obj &amp;amp;&amp;amp..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/rr/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190816211658.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/IDA-patch/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190816211658.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/TOOL"><i class="tag post-item-tag">TOOL</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/IDA-patch/">IDA打patch学习小结</a></h2><time class="has-text-grey" datetime="2019-08-16T12:59:05.000Z">2019-08-16</time><p class="is-flex-grow-2 mt-2">keypatch基本使用Edit -&amp;gt; Keypatch -&amp;gt; Patcher选中一行指令patch
-可以输入汇编代码 nop啥的
-Edit -&amp;gt; Keypatch -&amp;gt; Fill Range选中一定范围的指令一起patch
-可以输入汇编代码
-也可以输入16进制 “90” “0x90” “90,91” “AAh”等。
-Edit -&amp;gt; Patch program -&amp;gt; Apply patches to input file撤消上一个操作，而且可以撤销多次（好像是无限制？亲测20次还是能继续撤销（好哎
-Edit -&amp;gt; Patch program -&amp;gt; Apply patches to input file将修改保存到一个新的二进制文件（这是ida原本就有的功能
-E..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/IDA-patch/">Read more</a></section></article></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+mkdir obj &amp;amp;&amp;amp..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/rr/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/img/image-20220521155821544.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/IDA-patch/"><img class="post-cover-img js-img-fadeIn" src="/img/image-20220521155821544.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/TOOL"><i class="tag post-item-tag">TOOL</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/IDA-patch/">IDA打patch学习小结</a></h2><time class="has-text-grey" datetime="2019-08-16T12:59:05.000Z">2019-08-16</time><p class="is-flex-grow-2 mt-2">keypatch基本使用keypatch是用来辅助打patch的一个插件。IDA本身有简单的patch功能，可以写十六进制和汇编语句。keypatch提供的功能主要是可以即时显示汇编语句的十六进制，你可以知道你的汇编占多少字节，打完patch后在它把原汇编备注在旁边，它还可以帮你计算跳转偏移。
+
+Edit -&amp;gt; Keypatch -&amp;gt; Patcher
+选中一行指令patch
+可以输入汇编代码 nop啥的。
+Edit -&amp;gt; Keypatch -&amp;gt; Fill Range
+选中一定范围的指令一起patch
+可以输入汇编代码，也可以输入16进制 “90” “0x90” “90,91” “AAh”等。
+Edit -&amp;gt; Patch program -&amp;gt; Apply patches t..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/IDA-patch/">Read more</a></section></article></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a><a href="/tags/CTF"><span class="tag post-item-tag" style="margin-bottom: 5px;">CTF</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
 
 window.addEventListener('resize', $claudia.throttle(function () {
     var images = document.querySelectorAll('.js-img-fadeIn')
