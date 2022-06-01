@@ -1,0 +1,38 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>Q1IQ's blog</title><meta name="description" content="Being Honest With Yourself"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/favicon.png"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/widget-post-list.css"><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Q1IQ's blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">Q1IQ's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><span>Tags · AWD</span></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><article class="post-container is-flex is-justify-content-center section container is-max-widescreen pt-4 px-2"><div class="columns is-variable is-1-tablet is-3-desktop-only is-2-widescreen is-full-width"><section class="column"><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn-checker/"><img class="post-cover-img js-img-fadeIn" src="/images/nasa-WKT3TE5AQu0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/AWD"><i class="tag post-item-tag">AWD</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn-checker/">awd pwn checker编写记录</a></h2><time class="has-text-grey" datetime="2021-03-22T14:34:14.000Z">2021-03-22</time><p class="is-flex-grow-2 mt-2">
+最近在为awd pwn题写checker，然后我写了个能检测pwn题全部功能是否可以正常使用的脚本，被反馈还需要改进下：
+
+不可以用pwntools库
+不能让选手直接nop free，要不选手体验差
+
+pwntools禁用对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，zio。
+from zio import *
+
+is_local = True
+
+if is_local:
+    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwning development
+else:
+    io = zio((&amp;#39;1.2.3.4&amp;..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/awd-pwn-checker/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn/"><img class="post-cover-img js-img-fadeIn" src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/AWD"><i class="tag post-item-tag">AWD</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn/">awd pwn方向技巧小结</a></h2><time class="has-text-grey" datetime="2021-01-19T17:02:03.000Z">2021-01-20</time><p class="is-flex-grow-2 mt-2">
+去年参加了不少线下赛，总结一些pwn方向打awd的小技巧，当作备忘。
+打Patch拿到题目的第一步是备份，然后是看题找漏洞，找到漏洞的第一步是打patch把漏洞修好，然后再写利用。
+一般打patch有两种方式，一是你把打好patch的二进制交给主办方，主办方帮你替换文件，打patch的字节数有一定限制，你不能大改特改或上通防，比如国赛、强网杯线下；二是自己scp把文件传过去，比如湖湘杯、上海大学生赛，我记得去年的湖湘杯是可以大改特改，上海赛会检查选手的服务器，改的太多会警告。
+Patch方法很多，一般改动小的话我就用IDA直接修改，改动大的用LIEF。打完patch运行检查一下，要不部署上去服务直接down了得不偿失。
+IDA IDA patch方法可以看我这篇 https://q1iq.top/IDA-..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/awd-pwn/">Read more</a></section></article></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a><a href="/tags/AWD"><span class="tag post-item-tag" style="margin-bottom: 5px;">AWD</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+
+window.addEventListener('resize', $claudia.throttle(function () {
+    var images = document.querySelectorAll('.js-img-fadeIn')
+
+    images.forEach($claudia.blurBackdropImg)
+}, 150))</script></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><a title="twitter" target="_blank" rel="noopener nofollow" href="//twitter.com/Q1iqF"><i class="iconfont icon-twitter"></i></a><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/Q1IQ"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><a title="rss" target="_blank" rel="noopener nofollow" href="/atom.xml"><i class="iconfont icon-rss"></i></a><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p><span>Copyright ©</span><span> Q1IQ 2022</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async defer src="https://buttons.github.io/buttons.js"></script><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+
+window.addEventListener('resize', $claudia.throttle(function () {
+    var images = document.querySelectorAll('.js-img-fadeIn')
+
+    images.forEach($claudia.blurBackdropImg)
+}, 150))</script></body></html>
