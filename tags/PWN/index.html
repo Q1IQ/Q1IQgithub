@@ -78,7 +78,122 @@ head -n 10 /proc/kallsyms
 grep commit_creds /proc/kallsyms 
 grep prepare_kernel_cred /proc/kallsyms
 
-echo 0 &amp;gt; /proc/sys/kernel/k..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/linux-kernel/">Read more</a></section></article><section class="paginator is-flex is-justify-content-flex-end is-flex-wrap-wrap mt-5"><span class="page-number current">1</span><a class="page-number" href="/tags/PWN/page/2/">2</a><a class="page-number" href="/tags/PWN/page/3/">3</a><a class="extend next" rel="next" href="/tags/PWN/page/2/"><i class="iconfont icon-next has-text-grey"></i></a></section></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a><a href="/tags/AWD"><span class="tag post-item-tag" style="margin-bottom: 5px;">AWD</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
+echo 0 &amp;gt; /proc/sys/kernel/k..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/linux-kernel/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/IOFILE/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190817171647.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/IOFILE/">IOFILE题目小结</a></h2><time class="has-text-grey" datetime="2020-02-19T03:58:15.000Z">2020-02-19</time><p class="is-flex-grow-2 mt-2">源码调试要下载源码得先把sources.list的deb-src开头的注释去掉，更新一下
+sudo apt-get update 
+sudo apt-get upgrade 
+下载源码
+sudo apt-get source libc6-dev
+会报这么一个错，但是不影响用，暂且不管。
+W: Can&amp;#39;t drop privileges for downloading as file &amp;#39;glibc_2.23-0ubuntu11.dsc&amp;#39; couldn&amp;#39;t be accessed by user &amp;#39;_apt&amp;#39;. - pkgAcquire::Run (13: Permission denied)
+在gdb里运行：
+directory ~/glibc/glibc-2...</p><a class="button is-default mt-2 has-text-weight-semibold" href="/IOFILE/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200203015656.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/vmPwn/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200203015656.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/vmPwn/">vm Pwn题目小结</a></h2><time class="has-text-grey" datetime="2020-01-29T05:59:34.000Z">2020-01-29</time><p class="is-flex-grow-2 mt-2">ez_op题目分析首先根据入口点找到main函数，一般入口点就是IDA里Export窗口的start函数。
+
+可以看到上面main函数的逻辑是：
+
+使用mallocinfo函数为操作数分配空间，为操作码分配空间。
+
+
+
+读入操作码至buf中，并将其转换成整数形式保存在opcode中；操作数同理保存在oprand中
+进入大循环loop函数，就是本题的虚拟机，后面详细讲解。
+使用freeinfo函数释放分配的空间
+
+
+loop函数就是虚拟机，主要逻辑是一个大循环，每次循环完成一个操作码对应的功能。那么怎么知道每个操作码对应什么功能呢，我觉得对我来说只能慢慢逆向+猜吧。这个题目的功能有save、load、push、pop、加减乘除，最后逆出来的效果就是下面这样：
+
+
+漏洞点在于load和save都没有检查是否越界..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/vmPwn/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/anxun-MIPS-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/anxun-MIPS-wp/">安洵杯 MIPS wp</a></h2><time class="has-text-grey" datetime="2020-01-17T09:33:44.000Z">2020-01-17</time><p class="is-flex-grow-2 mt-2">题目名字就叫做mips，肯定是mips架构的了。
+$ file pwn2 
+pwn2: ELF 32-bit LSB executable, MIPS, MIPS32 version 1 (SYSV), dynamically linked, interpreter /lib/ld-, not stripped
+直接运行程序会显示下面的信息。
+
+
+所以首先是搭建环境，搭建环境的目标是：1.能运行题目程序 2.能用python脚本和题目程序进行交互 3.能够调试题目程序
+mips
+mip汇编知识https://ray-cp.github.io/archivers/MIPS_Debug_Environment_and_Stack_Overflow#mips-%E6%B1%87%E7%BC%96%E5%9F%BA..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/anxun-MIPS-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191110235209.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/huxiang-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191110235209.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/huxiang-wp/">湖湘杯 wp</a></h2><time class="has-text-grey" datetime="2019-11-10T15:15:36.000Z">2019-11-10</time><p class="is-flex-grow-2 mt-2">历时12h，两道pwn。比赛如何不评价，默默做题。
+HackNote题目有add、delete、edit
+啥保护也没开，有问题
+
+edit里平白无故多算一次size，很有问题，可以构造off by 好几个
+
+此外这题的难点还在于这题是静态编译的，shellcode不知道往哪写，我一开始找了几个静态的地方，等我想调用它的时候吧，内容就变了。反正后来就随便找到一40的size位就用上了，是IOFILE前面的地方。
+from pwn import *
+context.log_level = &amp;#39;debug&amp;#39;
+context(arch = &amp;#39;amd64&amp;#39;, os = &amp;#39;linux&amp;#39;)
+shellcode=asm(shellcraft.sh())
+debug=1
+if d..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/huxiang-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE1MTYxMzUxLnBuZw?x-oss-process=image/format,png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/how2heap/"><img class="post-cover-img js-img-fadeIn" src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9xaWlxLTEyNTg4ODc2MjUuY29zLmFwLWNoZW5nZHUubXlxY2xvdWQuY29tLzIwMTkwODE1MTYxMzUxLnBuZw?x-oss-process=image/format,png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/how2heap/">how2heap学习小结</a></h2><time class="has-text-grey" datetime="2019-10-29T07:16:48.000Z">2019-10-29</time><p class="is-flex-grow-2 mt-2">本文是自己的一点心得，没有特别地总结整理。
+编译找了半天编译的方法，结果突然发现文件夹里有个Makefile，一键make就全编译了，我觉得我就是个憨憨。
+first_fitchar* a = malloc(512); 经过对齐后 chunk size 为 0x210
+free(a); 后块a被放到 unsorted_bins 中
+
+执行 c = malloc(500); （500+8）经过16字节对齐后 chunk size 为 0x200 ，此时small bins是空的，就从unsorted bins中找，找到了大小为0x210的块a。而0x210 的块切割后剩下的块大小为0x10，小于MINSIZE（0x20），所以不切直接分配。
+
+然后自己测试了一下
+
+c = malloc(512-0x20+8)..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/how2heap/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191030004923.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/dfjk-ichunqiu-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191030004923.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/dfjk-ichunqiu-wp/">巅峰极客 ichunqiu wp</a></h2><time class="has-text-grey" datetime="2019-10-28T14:17:22.000Z">2019-10-28</time><p class="is-flex-grow-2 mt-2">记录一下巅峰极客的两道pwn，比赛只出了第一道，第二道PWN是赛后复现的，感觉很值得一学，对理解IOFILE很有帮助。
+Pwn题目分析保护全开，乍看add、delete、show、change全有
+然而仔细一看这个change往块里读的是stream的内容
+
+而stream是fopen(&amp;quot;/dev/urandom&amp;quot;, &amp;quot;r&amp;quot;);得到的fd
+
+delete存在UAF
+
+add要求块数量&amp;lt;=0xF，大小&amp;gt;0x7F，块的地址必须在[heapbase,heapbase+0x600]
+
+show，没什么特别的
+
+利用
+泄露libc和heap base
+构造overlap改top的size，利用house_of_force在堆基地址分配块，改stream的内容
+改st..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/dfjk-ichunqiu-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191028215103.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/RoarCTF-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191028215103.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/RoarCTF-wp/">RoarCTF wp</a></h2><time class="has-text-grey" datetime="2019-10-12T13:43:53.000Z">2019-10-12</time><p class="is-flex-grow-2 mt-2">realloc_magic一共三个功能
+realloc。realloc 0可以达到free+清零的效果。
+
+free。存在UAF，可以realloc已经free的内存。
+
+backdoor。功能是清零，只能用一次。
+
+overlap tcache 的方法是free块8次，就可以把这一块放到unsorted bin里，把块分为A|B，A和B得不一样大，realloc(A.size)得到A，realloc(0)把A放到tcache里，realloc(B.size)得到B，realloc(0)把B放到tcache里，realloc(A+B的size)改B的size和fd，realloc(B.size)，realloc(0)，再realloc(B.size)就可以得到fd所在的内存。
+通过以上overlap的方法改..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/RoarCTF-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://img-blog.csdnimg.cn/20191015193932305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/heap-overlap-summary/"><img class="post-cover-img js-img-fadeIn" src="https://img-blog.csdnimg.cn/20191015193932305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/heap-overlap-summary/">heap overlap方法小结</a></h2><time class="has-text-grey" datetime="2019-10-10T12:27:32.000Z">2019-10-10</time><p class="is-flex-grow-2 mt-2">本文不考虑和top合并， 并且大小非fastbin。实际做题的时候得要考虑top。
+free时overlappoison_null_byteP(P是size被null的块)|Q
+需要构造的点：
+1. chunksize(P) == prev_size (next_chunk(P)) //因为offbyone后的size一定&amp;lt;=原始size，所以prev_size (next_chunk(P)) 可以自己伪造
+2.free(P)后分割P为块A和B A|B，此时Q的pre_inuse也为0了
+3.free A，free Q，A和Q会 consolidate， B就被overlap了
+注意 free 的时候
+- 检查前一个chunk空闲吗（检查本块的prev_inuse）
+- 检查后一个是不是top chu..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/heap-overlap-summary/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102130240.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/xman-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191102130240.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/xman-wp/">xman wp</a></h2><time class="has-text-grey" datetime="2019-09-30T08:44:36.000Z">2019-09-30</time><p class="is-flex-grow-2 mt-2">weapon_store三个功能：view、buy、checkout
+view，有点想吐槽，你一个卖武器的，价目表居然跟实际价格不一样。。下面的buy功能可以看到实际价格计算方法是100 * (v3 + 1) - 29，也就是说武器1卖171，武器2卖271。371。471。。。。
+
+buy，先计算买的武器单价*数量是不是超过了手里的money，没超过就放到购物车里，但可以通过整数溢出绕过这个限制；另外可以看到malloc的时候还和0x1ff与了一下，可能有堆溢出。
+
+checkout，当手里的money少于买下所有武器要花的钱时，就给你一次堆溢出的机会，这时可以把其他武器的name改换为flag输出。
+
+输入选项的地方看起来可以泄露点什么出来
+
+但这个地方存放的是两个栈里的值，一个text段的值，也得不到..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/xman-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://img-blog.csdnimg.cn/20190922161945407.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/ByteCtf-note_five/"><img class="post-cover-img js-img-fadeIn" src="https://img-blog.csdnimg.cn/20190922161945407.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/ByteCtf-note_five/">ByteCtf note_five 两种解法</a></h2><time class="has-text-grey" datetime="2019-09-16T12:59:05.000Z">2019-09-16</time><p class="is-flex-grow-2 mt-2">阅读大佬的wp后复现了一下本题的多种解法
+题目分析
+本题是一道菜单题，只有new、edit和delete功能，没有show功能。不存在UAF。
+
+edit所用的输入函数存在Off-By-One漏洞
+
+chunk 的大小限制在 0x8f ～ 0x400
+
+
+解题思路1（exp见文末）利用Off-By-One漏洞构造Overlapping，构造块的bk 为global_max_fast -0x10， unsorted bin attack 修改global_max_fast；利用 stdout-0x51处的 0xff 作为 chunk 的 size，fast bin attack 到_IO_2_1_stdout_附近分配chunk，修改_IO_write_base中的值，使它指向想要泄露的地址(stdout+0..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/ByteCtf-note_five/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190629172154.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/pwnable-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20190629172154.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/pwnable-wp/">pwnable wp</a></h2><time class="has-text-grey" datetime="2019-06-25T12:35:32.000Z">2019-06-25</time><p class="is-flex-grow-2 mt-2">fdfd是文件描述符，fd=0为标准输入
+ssize_t read(int fd,void *buf,size_t nbyte)
+read函数从fd中读取内容到buf。
+col构造命令行参数
+from pwn import *
+
+pwn_ssh = ssh(host=&amp;#39;pwnable.kr&amp;#39;,user=&amp;#39;col&amp;#39;,password=&amp;#39;guest&amp;#39;,port=2222)
+
+code = &amp;#39;\xE8\x05\xD9\x1D&amp;#39;+&amp;#39;\x01&amp;#39;*16
+cn = pwn_ssh.process(argv=[&amp;#39;col&amp;#39;,code],executable=&amp;#39;./col&amp;#39;)
+
+print(cn.recv())
+
+b..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/pwnable-wp/">Read more</a></section></article></section><aside class="column is-hidden-mobile is-4-tablet is-3-widescreen"><div style="position: sticky; top: 50px;"><main class="aside-card-container tag-widget is-in-tag-page"><h3>Tags</h3><section><a href="/tags/CVE"><span class="tag post-item-tag" style="margin-bottom: 5px;">CVE</span></a><a href="/tags/PWN"><span class="tag post-item-tag" style="margin-bottom: 5px;">PWN</span></a><a href="/tags/TOOL"><span class="tag post-item-tag" style="margin-bottom: 5px;">TOOL</span></a><a href="/tags/AWD"><span class="tag post-item-tag" style="margin-bottom: 5px;">AWD</span></a></section></main></div></aside></div></article><script>$claudia.fadeInImage(null, $claudia.blurBackdropImg)
 
 window.addEventListener('resize', $claudia.throttle(function () {
     var images = document.querySelectorAll('.js-img-fadeIn')
