@@ -248,6 +248,29 @@
   </entry>
   
   <entry>
+    <title>DEFCON-Qualifier-2022 smuggler&#39;s cove/constricted 题解</title>
+    <link href="http://q1iq.top/Defcon2022-pwn-wp/"/>
+    <id>http://q1iq.top/Defcon2022-pwn-wp/</id>
+    <published>2020-06-01T17:02:03.000Z</published>
+    <updated>2022-06-21T07:57:33.106Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。</p><p>文章首发于先知社区，链接 <a href="https://xz.aliyun.com/t/11445">https://xz.aliyun.com/t/11445</a></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。&lt;/p&gt;
+&lt;p&gt;文章首发于先知社区，链接 &lt;a href=&quot;h</summary>
+      
+    
+    
+    
+    
+    <category term="PWN" scheme="http://q1iq.top/tags/PWN/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Linux kernel学习记录</title>
     <link href="http://q1iq.top/Linux-kernel/"/>
     <id>http://q1iq.top/Linux-kernel/</id>
@@ -445,29 +468,6 @@ pwn2: ELF 32-bit LSB executable, MIPS, MIPS32 version 1 (SYSV), dynamically link
       
     <summary type="html">&lt;h3 id=&quot;realloc-magic&quot;&gt;&lt;a href=&quot;#realloc-magic&quot; class=&quot;headerlink&quot; title=&quot;realloc_magic&quot;&gt;&lt;/a&gt;realloc_magic&lt;/h3&gt;&lt;p&gt;一共三个功能&lt;/p&gt;
 &lt;p&gt;realloc。real</summary>
-      
-    
-    
-    
-    
-    <category term="PWN" scheme="http://q1iq.top/tags/PWN/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>heap overlap方法小结</title>
-    <link href="http://q1iq.top/heap-overlap-summary/"/>
-    <id>http://q1iq.top/heap-overlap-summary/</id>
-    <published>2019-10-10T12:27:32.000Z</published>
-    <updated>2022-05-11T16:38:29.643Z</updated>
-    
-    <content type="html"><![CDATA[<p>本文不考虑和top合并， 并且大小非fastbin。实际做题的时候得要考虑top。</p><h2 id="free时overlap"><a href="#free时overlap" class="headerlink" title="free时overlap"></a>free时overlap</h2><h3 id="poison-null-byte"><a href="#poison-null-byte" class="headerlink" title="poison_null_byte"></a>poison_null_byte</h3><p><code>P(P是size被null的块)|Q</code></p><p>需要构造的点：</p><pre><code>1. chunksize(P) == prev_size (next_chunk(P)) //因为offbyone后的size一定&lt;=原始size，所以prev_size (next_chunk(P)) 可以自己伪造2.free(P)后分割P为块A和B A|B，此时Q的pre_inuse也为0了3.free A，free Q，A和Q会 consolidate， B就被overlap了</code></pre><p>注意 free 的时候</p><pre><code>- 检查前一个chunk空闲吗（检查本块的prev_inuse）- 检查后一个是不是top chunk- 检查后一个chunk空闲吗（nextinuse = inuse_bit_at_offset(nextchunk, nextsize);）</code></pre><p>这种方法利用的点就在于free Q的时候，glibc2.23 没有检查 prev_size(Q) == chunksize（pre_chunk(Q)）<br>glibc2.23:<br><img src="https://img-blog.csdnimg.cn/20191015193932305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>glibc2.29是要检查的了（我看的在线版是2.29而已），此时这个利用方法就失效了。<br><img src="https://img-blog.csdnimg.cn/20191015182545197.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MzM1MDg4MA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p><h3 id="CTFWiki5：通过extend前向overlapping"><a href="#CTFWiki5：通过extend前向overlapping" class="headerlink" title="CTFWiki5：通过extend前向overlapping"></a>CTFWiki5：通过extend前向overlapping</h3><p>通过修改pre_inuse域和pre_size域实现合并前面的块</p><pre><code>int main(void)&#123;    void *ptr1,*ptr2,*ptr3,*ptr4;    ptr1=malloc(128);//smallbin1    ptr2=malloc(0x10);//fastbin1    ptr3=malloc(0x10);//fastbin2    ptr4=malloc(128);//smallbin2    malloc(0x10);//防止与top合并    free(ptr1);    *(int *)((long long)ptr4-0x8)=0x90;//修改pre_inuse域    *(int *)((long long)ptr4-0x10)=0xd0;//修改pre_size域    free(ptr4);//unlink进行前向extend    malloc(0x150);//占位块&#125;</code></pre><p>和 poison_null_byte 的区别在于：本例中pre_inuse(Q)和pre_size(Q)都是自己伪造的，而 poison_null_byte 是free(P)得到的。</p><h3 id="overlapping-chunks-向高地址合并"><a href="#overlapping-chunks-向高地址合并" class="headerlink" title="overlapping_chunks(向高地址合并)"></a>overlapping_chunks(向高地址合并)</h3><p><code>A|B|C</code><br>A的size改为A+B的size<br>free(A)<br>malloc(sizeof(A+B)) 即可overlap B</p><h3 id="overlapping-chunks-2"><a href="#overlapping-chunks-2" class="headerlink" title="overlapping_chunks_2"></a>overlapping_chunks_2</h3><p><code>A|B|C</code><br>A的size改为A+B的size<br>free( C )<br>free( A )<br>malloc(sizeof(A+B+C))<br>B就被overlap了</p><h3 id="house-of-einherjar"><a href="#house-of-einherjar" class="headerlink" title="house_of_einherjar"></a>house_of_einherjar</h3><p>首先看后向合并(向低地址合并)的代码</p><pre><code> if (!prev_inuse(p)) &#123;            prevsize = prev_size(p);            size += prevsize;            p = chunk_at_offset(p, -((long) prevsize));            unlink(av, p, bck, fwd);        &#125;</code></pre><p>house_of_einherjar的关键就在于绕过unlink的检查：</p><p><code>P(内部伪造了假块p)|Q(被nullbyte)</code></p><pre><code>1. 利用 unlink 漏洞的时候：p-&gt;fd = &amp;p-3*4p-&gt;bk = &amp;p-2*4在这里利用时，因为没有办法找到 &amp;p , 所以直接让：p-&gt;fd = pp-&gt;bk = p2. chunksize(p) != prev_size (next_chunk(p)） next_chunk是根据p的size算的，也就是说只要p偏移size处的值为size即可。3. Q的pre_inuse位为0，prev_size(Q)需覆盖到p的头部，free(Q)即可获得prev_size(Q)+sizeof(Q)的空闲chunk</code></pre><p>和poison_null_byte及CTFWiki5的区别就在于，free后向低地址合并的时候，house_of_einherjar低地址的块是自己伪造的，而poison_null_byte低地址的块是free来的。</p><p>其实poison_null_byte低地址的块也可以自己伪造。对于<code>P|Q</code>，poison_null_byte是P被nullbyte，而且是先free(P)，再nullbyte，所以保留了pre_size(Q)，nullbyte后构造假的pre_size(nextchunk(P))，free(Q)即可获得P+Q。例子里是把P给分成了A|B（因为P的size已经被nullbyte了，所以怎么分都不会再影响pre_size(Q)），然后free A，以在free(Q)的时候绕过unlink检查，当然也可以通过伪造来绕过size和unlink检查，构造以下条件即可：</p><pre><code>*(size_t*)(b1+0x100) = 0x110;//chunksize(A) != prev_size (next_chunk(A)）*(size_t*)(b1) = (size_t*)(b1-0x10);//FD-&gt;bk != P || BK-&gt;fd != P*(size_t*)(b1+0x8) =(size_t*) (b1-0x10);</code></pre><p>当然分为A和B也有好处，这样能够overlap B，控制B的所有信息。</p><p>以上是比较保守的做法，how2heap里的就相对大胆：在栈里伪造一个假的freed的chunk，把prev_size(Q)改为<code>nullbyte了的块的地址-栈中假chunk的地址</code>，free(Q)后获得了在栈上malloc块的机会。</p><h2 id="malloc时overlap"><a href="#malloc时overlap" class="headerlink" title="malloc时overlap"></a>malloc时overlap</h2><h3 id="CTFWiki3：对free的smallbin进行extend"><a href="#CTFWiki3：对free的smallbin进行extend" class="headerlink" title="CTFWiki3：对free的smallbin进行extend"></a>CTFWiki3：对free的smallbin进行extend</h3><pre><code>int main()&#123;    void *ptr,*ptr1;    ptr=malloc(0x80);//分配第一个0x80的chunk1    malloc(0x10);//分配第二个0x10的chunk2    free(ptr);//首先进行释放，使得chunk1进入unsorted bin    *(int *)((int)ptr-0x8)=0xb1;    ptr1=malloc(0xa0);&#125;</code></pre>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;p&gt;本文不考虑和top合并， 并且大小非fastbin。实际做题的时候得要考虑top。&lt;/p&gt;
-&lt;h2 id=&quot;free时overlap&quot;&gt;&lt;a href=&quot;#free时overlap&quot; class=&quot;headerlink&quot; title=&quot;free时overlap&quot;&gt;&lt;/a&gt;f</summary>
       
     
     

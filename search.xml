@@ -194,6 +194,25 @@
     
     
     <entry>
+      <title>DEFCON-Qualifier-2022 smuggler&#39;s cove/constricted 题解</title>
+      <link href="Defcon2022-pwn-wp/"/>
+      <url>Defcon2022-pwn-wp/</url>
+      
+        <content type="html"><![CDATA[<p>本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。</p><p>文章首发于先知社区，链接 <a href="https://xz.aliyun.com/t/11445">https://xz.aliyun.com/t/11445</a></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> PWN </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Linux kernel学习记录</title>
       <link href="Linux-kernel/"/>
       <url>Linux-kernel/</url>
