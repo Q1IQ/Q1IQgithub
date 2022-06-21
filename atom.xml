@@ -252,15 +252,15 @@
     <link href="http://q1iq.top/Defcon2022-pwn-wp/"/>
     <id>http://q1iq.top/Defcon2022-pwn-wp/</id>
     <published>2020-06-01T17:02:03.000Z</published>
-    <updated>2022-06-21T07:57:33.106Z</updated>
+    <updated>2022-06-21T08:20:15.327Z</updated>
     
-    <content type="html"><![CDATA[<p>本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。</p><p>文章首发于先知社区，链接 <a href="https://xz.aliyun.com/t/11445">https://xz.aliyun.com/t/11445</a></p>]]></content>
+    <content type="html"><![CDATA[<p><img src="/images/wp6406604-splatoon.jpg" alt="cover"></p><p>本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。</p><p>文章首发于先知社区，链接 <a href="https://xz.aliyun.com/t/11445">https://xz.aliyun.com/t/11445</a></p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要稍高，但是同时也学习到了不少新的知识。以下为这两道题目的分析。&lt;/p&gt;
-&lt;p&gt;文章首发于先知社区，链接 &lt;a href=&quot;h</summary>
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/images/wp6406604-splatoon.jpg&quot; alt=&quot;cover&quot;&gt;&lt;/p&gt;
+&lt;p&gt;本文是对Defcon资格赛中 Pwn 方向两道题目的复现，分别是 smuggler’s cove 以及 constricted。难度相比以往的国内赛要</summary>
       
     
     
