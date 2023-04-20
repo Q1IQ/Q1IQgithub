@@ -151,16 +151,20 @@ directory ~/glibc/glibc-2...</p><a class="button is-default mt-2 has-text-weight
 loop函数就是虚拟机，主要逻辑是一个大循环，每次循环完成一个操作码对应的功能。那么怎么知道每个操作码对应什么功能呢，我觉得对我来说只能慢慢逆向+猜吧。这个题目的功能有save、load、push、pop、加减乘除，最后逆出来的效果就是下面这样：
 
 
-漏洞点在于load和save都没有检查是否越界..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/vmPwn/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/anxun-MIPS-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/anxun-MIPS-wp/">安洵杯 MIPS wp</a></h2><time class="has-text-grey" datetime="2020-01-17T09:33:44.000Z">2020-01-17</time><p class="is-flex-grow-2 mt-2">题目链接 https://github.com/Q1IQ/ctf/blob/master/mips/pwn2
+漏洞点在于load和save都没有检查是否越界..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/vmPwn/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/anxun-MIPS-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20200126204738.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/anxun-MIPS-wp/">安洵杯 MIPS wp</a></h2><time class="has-text-grey" datetime="2020-01-17T09:33:44.000Z">2020-01-17</time><p class="is-flex-grow-2 mt-2">题目题目链接 https://github.com/Q1IQ/ctf/blob/master/mips/pwn2
 题目名字就叫做mips，肯定是mips架构的了。
 $ file pwn2 
 pwn2: ELF 32-bit LSB executable, MIPS, MIPS32 version 1 (SYSV), dynamically linked, interpreter /lib/ld-, not stripped
 直接运行程序会显示下面的信息。
 
 
-所以首先是搭建环境，搭建环境的目标是：1.能运行题目程序 2.能用python脚本和题目程序进行交互 3.能够调试题目程序
-mips
+所以首先是搭建环境，搭建环境的目标是：
 
+能运行题目程序 
+能用python脚本和题目程序进行交互 
+能够调试题目程序
+
+mips
 mip汇编知识: https://ray-cp.github.io/archivers/MIPS_Debug_Envir..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/anxun-MIPS-wp/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191110235209.png" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/huxiang-wp/"><img class="post-cover-img js-img-fadeIn" src="https://qiiq-1258887625.cos.ap-chengdu.myqcloud.com/20191110235209.png" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/PWN"><i class="tag post-item-tag">PWN</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/huxiang-wp/">湖湘杯 wp</a></h2><time class="has-text-grey" datetime="2019-11-10T15:15:36.000Z">2019-11-10</time><p class="is-flex-grow-2 mt-2">历时12h，两道pwn。比赛如何不评价，默默做题。
 HackNote题目有add、delete、edit
 啥保护也没开，有问题
