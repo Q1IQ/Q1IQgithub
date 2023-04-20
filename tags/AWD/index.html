@@ -10,15 +10,14 @@
 不可以用pwntools库
 不能让选手直接nop free，要不选手体验差
 
+项目代码已开源：https://github.com/Q1IQ/AWD-PWN-Checker
 pwntools禁用对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，zio。
 from zio import *
 
 is_local = True
 
 if is_local:
-    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwning development
-else:
-    io = zio((&amp;#39;1.2.3.4&amp;..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/awd-pwn-checker/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn/"><img class="post-cover-img js-img-fadeIn" src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/AWD"><i class="tag post-item-tag">AWD</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn/">awd pwn方向技巧小结</a></h2><time class="has-text-grey" datetime="2021-01-19T17:02:03.000Z">2021-01-20</time><p class="is-flex-grow-2 mt-2">
+    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwni..</p><a class="button is-default mt-2 has-text-weight-semibold" href="/awd-pwn-checker/">Read more</a></section></article><article class="post-item-card"><header class="is-relative is-flex"><div class="post-cover-backdrop is-hidden"><img src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.."></div><a class="post-cover-link has-text-centered skeleton" href="/awd-pwn/"><img class="post-cover-img js-img-fadeIn" src="/images/breno-machado-in9-n0JwgZ0-unsplash.jpg" alt="loading.." data-backdrop="true"></a></header><section class="content post-card-content p-4 pb-5"><header><a href="/tags/AWD"><i class="tag post-item-tag">AWD</i></a></header><h2 class="mt-4 mb-0 is-family-serif"><a href="/awd-pwn/">awd pwn方向技巧小结</a></h2><time class="has-text-grey" datetime="2021-01-19T17:02:03.000Z">2021-01-20</time><p class="is-flex-grow-2 mt-2">
 去年参加了不少线下赛，总结一些pwn方向打awd的小技巧，当作备忘。
 打Patch拿到题目的第一步是备份，然后是看题找漏洞，找到漏洞的第一步是打patch把漏洞修好，然后再写利用。
 一般打patch有两种方式，一是你把打好patch的二进制交给主办方，主办方帮你替换文件，打patch的字节数有一定限制，你不能大改特改或上通防，比如国赛、强网杯线下；二是自己scp把文件传过去，比如湖湘杯、上海大学生赛，我记得去年的湖湘杯是可以大改特改，上海赛会检查选手的服务器，改的太多会警告。

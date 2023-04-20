@@ -5,15 +5,14 @@
 不可以用pwntools库
 不能让选手直接nop free，要不选手体验差
 
+项目代码已开源：https://github.com/Q1IQ/AWD-PWN-Checker
 pwntools禁用对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，zio。
 from zio import *
 
 is_local = True
 
 if is_local:
-    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwning development
-else:
-    io = zio((&amp;#39;1.2.3.4&amp;.."><!-- hexo injector head_end start -->
+    io = zio(&amp;#39;./buggy-server&amp;#39;)            # used for local pwni.."><!-- hexo injector head_end start -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
@@ -24,6 +23,7 @@ else:
 <li>不可以用pwntools库</li>
 <li>不能让选手直接nop free，要不选手体验差</li>
 </ul>
+<p>项目代码已开源：<a target="_blank" rel="noopener" href="https://github.com/Q1IQ/AWD-PWN-Checker">https://github.com/Q1IQ/AWD-PWN-Checker</a></p>
 <h4 id="pwntools禁用"><a href="#pwntools禁用" class="headerlink" title="pwntools禁用"></a>pwntools禁用</h4><p>对我这种fw pwn手来说，没了pwntools就是没了胳膊，干啥啥不行。不过对于checker来说，只要有网络通信功能就行，于是找到了一个平替，<code>zio</code>。</p>
 <pre><code>from zio import *
 
